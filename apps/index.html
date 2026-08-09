@@ -80,6 +80,8 @@
         border-top-right-radius: 1.25rem !important;
         max-height: 88vh !important;
         margin-bottom: 0 !important;
+        overflow-y: auto !important;
+        background-color: #ffffff !important;
         animation: slideUpSheet 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       }
     }
@@ -468,18 +470,6 @@
       const [hasCustomKey, setHasCustomKey] = useState(() => !!(localStorage.getItem('USER_GEMINI_API_KEY') || localStorage.getItem('aiceo_gemini_key')));
       const floatingBarRef = useRef(null);
 
-      useEffect(() => {
-        function handleClickOutside(event) {
-          if (floatingBarRef.current && !floatingBarRef.current.contains(event.target)) {
-            setSelectedIds(new Set());
-          }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-          document.removeEventListener("mousedown", handleClickOutside);
-        };
-      }, [floatingBarRef]);
-
       // Search State & Filter Controls
       const [globalSearch, setGlobalSearch] = useState('');
       const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -501,14 +491,11 @@
       // Mobile Navigation & Pull-up Menu State
       const [mobileActiveTab, setMobileActiveTab] = useState('home'); // 'home' | 'calendar' | 'archive' | 'apikey'
       const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+      const [isMoveToModalOpen, setIsMoveToModalOpen] = useState(false);
 
-      // Automatically trigger Idea/Insight modal on page load
+      // Automatically trigger Idea/Insight grid view modal on page load
       useEffect(() => {
-        setActiveModalItem({
-          type: 'ideas',
-          item: { title: '', details: '', category: 'Business', stars: 1 },
-          isNew: true
-        });
+        setActiveSectionModal('ideas');
       }, []);
 
       // Modal Control States
@@ -1188,7 +1175,7 @@
               </div>
 
               {/* Navigation Menu */}
-              <nav className="flex items-center flex-wrap gap-x-2 sm:gap-x-3 gap-y-1 text-[10px] font-normal ml-auto">
+              <nav className="hidden sm:flex items-center flex-wrap gap-x-2 sm:gap-x-3 gap-y-1 text-[10px] font-normal ml-auto">
                 <button onClick={() => setActiveSectionModal('projects')} className="font-bold text-brandsky hover:underline cursor-pointer text-[10px]">
                   Projects
                 </button>
@@ -1323,7 +1310,7 @@
           </div>
 
           {/* 2. SUB-HEADER BAR (BIZ PLATFORM & BIZ COMMUNITY - SOFT LIGHT NAVY BACKGROUND) */}
-          <div className="bg-[#f0f4f8] border-b border-[#cbd5e1] relative z-[45] text-slate-800 shadow-sm">
+          <div className="hidden sm:block bg-[#f0f4f8] border-b border-[#cbd5e1] relative z-[45] text-slate-800 shadow-sm">
             <div className="max-w-6xl w-full mx-auto px-3 sm:px-4 py-[5.5px] flex items-center justify-end text-[10px] sm:text-[10.5px] flex-wrap gap-y-0.5 gap-x-2.5">
               
               {/* Favicon Group on the left */}
@@ -1357,64 +1344,55 @@
             className="sticky z-40 bg-appbg/95 backdrop-blur-md border-b border-gray-200 shadow-sm"
             style={{ top: `${headerHeight}px` }}
           >
-            <div className="max-w-6xl mx-auto px-4 py-1.5 flex items-center justify-between gap-2 flex-wrap relative">
-              {/* Metrics Format */}
-              <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 text-[10.5px] sm:text-[11.5px] font-normal text-slate-700">
-                <div className="flex items-center space-x-1 font-bold text-slate-800">
-                  <button onClick={() => scrollToBox('box-projects')} className="hover:text-brandsky cursor-pointer font-bold">
-                    Projects:
+            <div className="max-w-6xl mx-auto px-3 sm:px-4 py-1 flex flex-col sm:flex-row sm:items-center justify-between gap-1 relative text-[8.5px] sm:text-[9px]">
+              
+              {/* Metrics Structure: 1st Line (Projects), 2nd Line (Idea/Insight, Study, Mindfulness) */}
+              <div className="space-y-0.5 text-[8.5px] sm:text-[9px] font-normal text-slate-700">
+                {/* 1st Line: Project: Total ... */}
+                <div className="flex flex-wrap items-center gap-x-1.5 text-[8.5px] sm:text-[9px] font-normal">
+                  <button onClick={() => scrollToBox('box-projects')} className="hover:text-brandsky cursor-pointer font-bold text-slate-800">
+                    Project:
+                  </button>
+                  <button onClick={() => scrollToBox('box-projects')} className="hover:text-brandsky cursor-pointer hover:underline text-slate-600 font-normal">
+                    Total <span className="text-[#f97316] font-normal">{activeProjectsCount}</span>,
+                  </button>
+                  <button onClick={() => scrollToBox('box-projects')} className="hover:text-brandsky cursor-pointer hover:underline text-slate-600 font-normal">
+                    In Process <span className="text-[#f97316] font-normal">{inProgressCount}</span>,
+                  </button>
+                  <button onClick={() => scrollToBox('box-projects')} className="hover:text-brandsky cursor-pointer hover:underline text-slate-600 font-normal">
+                    x3 ⭐ <span className="text-[#f97316] font-normal">{threeStarProjectsCount}</span>
                   </button>
                 </div>
-                <button onClick={() => scrollToBox('box-projects')} className="hover:text-brandsky cursor-pointer hover:underline transition-colors text-slate-600 font-normal">
-                  Total <span className="text-[#f97316] font-normal">{activeProjectsCount}</span>,
-                </button>
-                <button onClick={() => scrollToBox('box-projects')} className="hover:text-brandsky cursor-pointer hover:underline transition-colors text-slate-600 font-normal">
-                  In Process <span className="text-[#f97316] font-normal">{inProgressCount}</span>,
-                </button>
-                <button onClick={() => scrollToBox('box-projects')} className="hover:text-brandsky cursor-pointer hover:underline transition-colors text-slate-600 font-normal mr-1">
-                  x3 ⭐ <span className="text-[#f97316] font-normal">{threeStarProjectsCount}</span>
-                </button>
-                <button
-                  onClick={() => setIsCalendarModalOpen(true)}
-                  className="px-1.5 py-0.5 rounded bg-sky-100 hover:bg-sky-200 text-brandsky font-normal text-[10px] cursor-pointer transition-colors shrink-0 mr-1"
-                  title="Open Project Execution Calendar"
-                >
-                  Calendar
-                </button>
-                <button
-                  onClick={() => setIsArchiveModalOpen(true)}
-                  className="px-1.5 py-0.5 rounded bg-amber-100 hover:bg-amber-200 text-[#f97316] font-normal text-[10px] cursor-pointer transition-colors shrink-0 mr-1.5"
-                  title="Open Completed Project Archive"
-                >
-                  Archive
-                </button>
-                <span className="text-slate-300">|</span>
-                <button onClick={() => scrollToBox('box-ideas')} className="hover:text-brandsky cursor-pointer hover:underline transition-colors text-slate-700 font-normal">
-                  Idea/ Insight: x3 ⭐ <span className="text-[#f97316] font-normal">{threeStarIdeasCount}</span>,
-                </button>
-                <button onClick={() => scrollToBox('box-study')} className="hover:text-brandsky cursor-pointer hover:underline transition-colors text-slate-700 font-normal">
-                  Study/ RnD: <span className="text-[#f97316] font-normal">{studies.length}</span>,
-                </button>
-                <button onClick={() => scrollToBox('box-mindset')} className="hover:text-brandsky cursor-pointer hover:underline transition-colors text-slate-700 font-normal">
-                  Mindfulness: <span className="text-[#f97316] font-normal">{mindsets.length}</span>
-                </button>
+
+                {/* 2nd Line: Idea / Insight: x3 ⭐ ... */}
+                <div className="flex flex-wrap items-center gap-x-1.5 text-[8.5px] sm:text-[9px] font-normal text-slate-700">
+                  <button onClick={() => scrollToBox('box-ideas')} className="hover:text-brandsky cursor-pointer hover:underline text-slate-700 font-normal">
+                    Idea / Insight: x3 ⭐ <span className="text-[#f97316] font-normal">{threeStarIdeasCount}</span>,
+                  </button>
+                  <button onClick={() => scrollToBox('box-study')} className="hover:text-brandsky cursor-pointer hover:underline text-slate-700 font-normal">
+                    Study/ RnD: <span className="text-[#f97316] font-normal">{studies.length}</span>,
+                  </button>
+                  <button onClick={() => scrollToBox('box-mindset')} className="hover:text-brandsky cursor-pointer hover:underline text-slate-700 font-normal">
+                    Mindfulness: <span className="text-[#f97316] font-normal">{mindsets.length}</span>
+                  </button>
+                </div>
               </div>
 
-              {/* SEARCH BAR (Relocated to far right, slightly shifted left for alignment with the boxes) */}
-              <div className="relative w-28 sm:w-40 shrink-0 ml-auto mr-1 sm:mr-1.5 z-10 my-1 sm:my-0">
+              {/* 3rd Line (or right side on desktop): SEARCH BAR */}
+              <div className="relative w-full sm:w-36 shrink-0 z-10 my-0.5 sm:my-0">
                 <input
                   type="text"
                   placeholder="Search..."
                   value={globalSearch}
                   onFocus={() => setIsSearchFocused(true)}
                   onChange={(e) => setGlobalSearch(e.target.value)}
-                  className="w-full pl-2 pr-6 py-0.5 bg-white border border-gray-300 rounded text-[11px] text-darkslate placeholder-grayholder focus:outline-none focus:border-brandsky shadow-none"
+                  className="w-full pl-2 pr-6 py-0.5 bg-white border border-gray-300 rounded text-[9.5px] text-darkslate placeholder-grayholder focus:outline-none focus:border-brandsky shadow-none"
                 />
                 {globalSearch && (
                   <button
                     type="button"
                     onClick={() => setGlobalSearch('')}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center text-grayholder hover:text-darkslate text-[10px] leading-none cursor-pointer p-0.5"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center text-grayholder hover:text-darkslate text-xs leading-none cursor-pointer p-0.5"
                     title="Clear search"
                   >
                     ✕
@@ -1453,17 +1431,16 @@
 
 
 
-          {/* TOP MULTI-ACTION BAR (Floating Bar, Sticky at top, Title Header) */}
+          {/* TOP MULTI-ACTION BAR (Floating Bar, Fixed & Centered, High Z-Index for Focused Zone) */}
           {selectedIds.size > 0 && (
             <div
               ref={floatingBarRef}
-              className="sticky z-50 max-w-6xl mx-auto px-3 sm:px-4 pt-2 pb-1 w-full transition-all"
-              style={{ top: `${headerHeight + 26}px` }}
+              className="fixed top-12 sm:top-14 left-1/2 -translate-x-1/2 z-[150] w-[92vw] max-w-6xl transition-all shadow-2xl"
             >
-              <div className="bg-slate-600/95 text-white p-2.5 sm:p-3 rounded-xl shadow-2xl flex flex-col gap-2 text-[11.5px] font-normal border border-slate-500/50 backdrop-blur-lg">
+              <div className="bg-slate-700/98 text-white p-2 sm:p-3 rounded-xl shadow-2xl flex flex-col gap-1.5 sm:gap-2 text-[8.5px] sm:text-[11.5px] font-normal border border-slate-500/80 backdrop-blur-md max-w-full overflow-hidden">
                 
-                <div className="flex items-center gap-2.5 w-full text-[11.5px] pb-1.5 border-b border-slate-500/50">
-                  <span className="bg-brandsky text-white px-2.5 py-1 rounded-full text-[11.5px] font-normal shrink-0 shadow-sm">
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 w-full text-[8.5px] sm:text-[11.5px] pb-1 sm:pb-1.5 border-b border-slate-500/50">
+                  <span className="bg-brandsky text-white px-2 py-0.5 sm:py-1 rounded-full text-[8px] sm:text-[11.5px] font-normal shrink-0 shadow-sm">
                     {selectedIds.size} Selected
                   </span>
 
@@ -1472,25 +1449,25 @@
                     placeholder="Write prompt..."
                     value={instructionPrompt}
                     onChange={(e) => setInstructionPrompt(e.target.value)}
-                    className="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-white placeholder-slate-400 text-[11.5px] font-normal focus:outline-none focus:border-brandsky transition-colors"
+                    className="flex-1 min-w-[100px] bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-white placeholder-slate-400 text-[8.5px] sm:text-[11.5px] font-normal focus:outline-none focus:border-brandsky transition-colors"
                   />
                   
                   <button
                     type="button"
                     onClick={() => setIsApiKeyModalOpen(true)}
                     title="Power CEO ActionNote with Your Own API Key & Custom RAG Context"
-                    className="relative px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-[11.5px] font-normal transition-colors cursor-pointer flex items-center gap-1.5 shrink-0 border border-slate-600"
+                    className="relative px-2 sm:px-2.5 py-1 sm:py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-[8px] sm:text-[11px] font-normal transition-colors cursor-pointer flex items-center gap-1 sm:gap-1.5 shrink-0 border border-slate-600 max-w-full"
                   >
-                    <span>🔑 If, Use my API Key</span>
+                    <span className="truncate">🔑 If, Use my API Key</span>
                     {hasCustomKey && (
-                      <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" title="Custom API Key Active"></span>
+                      <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-400 animate-pulse inline-block shrink-0" title="Custom API Key Active"></span>
                     )}
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setSelectedIds(new Set())}
-                    className="text-slate-400 hover:text-white text-base font-normal leading-none cursor-pointer shrink-0"
+                    className="text-slate-400 hover:text-white text-xs sm:text-base font-normal leading-none cursor-pointer shrink-0 ml-auto sm:ml-0"
                     title="Close"
                   >
                     ✕
@@ -1498,16 +1475,16 @@
                 </div>
 
                 {/* Row 2: Dynamic CEO Action Menu Buttons (Multi-line Flex Wrap) */}
-                <div className="flex flex-wrap items-center gap-2 pt-1.5 text-[11.5px]">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 pt-0.5 sm:pt-1 text-[8px] sm:text-[11.5px] max-w-full overflow-x-auto pb-0.5">
+                  <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                     <div className="flex flex-col text-green-400 cursor-help hover:text-brandsky transition-colors">
-                      <span className="font-bold text-[11.5px]">CEO ActionNote</span>
-                      <span className="font-normal text-[9px]">Powered by Qubit Algorithm</span>
+                      <span className="font-bold text-[8.5px] sm:text-[11.5px]">CEO ActionNote</span>
+                      <span className="font-normal text-[6.5px] sm:text-[9px]">Powered by Qubit Algorithm</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => setIsCeoActionManagerOpen(true)}
-                      className="opacity-70 hover:opacity-100 text-slate-400 hover:text-brandsky transition-opacity cursor-pointer text-[11.5px] font-normal"
+                      className="opacity-70 hover:opacity-100 text-slate-400 hover:text-brandsky transition-opacity cursor-pointer text-[8.5px] sm:text-[11.5px] font-normal"
                       title="Edit CEO Action Note Manager"
                     >
                       ✏️
@@ -1520,7 +1497,7 @@
                       type="button"
                       onClick={() => handleExecuteAction(act)}
                       title={act.tooltip || act.title}
-                      className={`px-2.5 py-1 rounded-lg text-[11.5px] font-normal transition-colors cursor-pointer shrink-0 border ${
+                      className={`px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[8px] sm:text-[11.5px] font-normal transition-colors cursor-pointer shrink-0 border ${
                         act.danger
                           ? 'bg-red-900/60 hover:bg-red-800 text-red-200 border border-red-700/50'
                           : act.highlight
@@ -1834,38 +1811,35 @@
             >
               <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-4 space-y-3 border border-gray-200 my-4 max-h-[90vh] flex flex-col">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-2 flex-wrap gap-2">
-                  <div className="flex items-center space-x-3 flex-wrap">
-                    <span className="font-bold text-sm text-brandsky whitespace-nowrap">Focused Zone Mode</span>
-                    <div className="flex items-center gap-2 sm:gap-2.5 text-[10.5px] border-l border-slate-200 pl-3">
-                      <button
-                        onClick={() => setActiveSectionModal('projects')}
-                        className={`font-bold hover:underline cursor-pointer transition-colors ${activeSectionModal === 'projects' ? 'text-brandsky' : 'text-slate-500'}`}
-                      >
-                        Projects
-                      </button>
-                      <button
-                        onClick={() => setActiveSectionModal('ideas')}
-                        className={`font-bold hover:underline cursor-pointer transition-colors ${activeSectionModal === 'ideas' ? 'text-brandsky' : 'text-slate-500'}`}
-                      >
-                        Idea/ Insight
-                      </button>
-                      <button
-                        onClick={() => setActiveSectionModal('studies')}
-                        className={`font-bold hover:underline cursor-pointer transition-colors ${activeSectionModal === 'studies' ? 'text-brandsky' : 'text-slate-500'}`}
-                      >
-                        Study/ RnD
-                      </button>
-                      <button
-                        onClick={() => setActiveSectionModal('mindsets')}
-                        className={`font-bold hover:underline cursor-pointer transition-colors ${activeSectionModal === 'mindsets' ? 'text-brandsky' : 'text-slate-500'}`}
-                      >
-                        Mindfulness
-                      </button>
-                    </div>
+                  <div className="flex items-center gap-1.5 sm:gap-2.5 text-[8px] sm:text-[10px] flex-wrap">
+                    <button
+                      onClick={() => setActiveSectionModal('projects')}
+                      className={`font-bold hover:underline cursor-pointer transition-colors ${activeSectionModal === 'projects' ? 'text-brandsky' : 'text-slate-500'}`}
+                    >
+                      Projects
+                    </button>
+                    <button
+                      onClick={() => setActiveSectionModal('ideas')}
+                      className={`font-bold hover:underline cursor-pointer transition-colors ${activeSectionModal === 'ideas' ? 'text-brandsky' : 'text-slate-500'}`}
+                    >
+                      Idea/ Insight
+                    </button>
+                    <button
+                      onClick={() => setActiveSectionModal('studies')}
+                      className={`font-bold hover:underline cursor-pointer transition-colors ${activeSectionModal === 'studies' ? 'text-brandsky' : 'text-slate-500'}`}
+                    >
+                      Study/ RnD
+                    </button>
+                    <button
+                      onClick={() => setActiveSectionModal('mindsets')}
+                      className={`font-bold hover:underline cursor-pointer transition-colors ${activeSectionModal === 'mindsets' ? 'text-brandsky' : 'text-slate-500'}`}
+                    >
+                      Mindfulness
+                    </button>
                   </div>
                   <button
                     onClick={() => setActiveSectionModal(null)}
-                    className="text-slate-400 hover:text-darkslate text-sm font-bold cursor-pointer px-1.5 py-0.5 rounded hover:bg-slate-100 transition-colors"
+                    className="text-slate-400 hover:text-darkslate text-xs sm:text-sm font-bold cursor-pointer px-1.5 py-0.5 rounded hover:bg-slate-100 transition-colors"
                     title="Close Focus View"
                   >
                     ✕
@@ -1886,17 +1860,17 @@
                         isNew: true
                       })}
                       headerControls={
-                        <div className="flex items-center space-x-2 text-xs">
+                        <div className="flex items-center gap-1 sm:gap-1.5 text-[8.5px] sm:text-[9.5px]">
                           <button
                             onClick={() => setIsCalendarModalOpen(true)}
-                            className="px-1.5 py-0.5 rounded bg-sky-100 hover:bg-sky-200 text-brandsky font-bold text-[10px] cursor-pointer transition-colors shrink-0"
+                            className="hidden sm:inline-flex px-1.5 py-0.5 rounded bg-sky-100 hover:bg-sky-200 text-brandsky font-bold text-[9px] cursor-pointer transition-colors shrink-0"
                             title="Open Project Execution Calendar"
                           >
                             Calendar
                           </button>
                           <button
                             onClick={() => setIsArchiveModalOpen(true)}
-                            className="px-1.5 py-0.5 rounded bg-amber-100 hover:bg-amber-200 text-[#f97316] font-bold text-[10px] cursor-pointer transition-colors shrink-0"
+                            className="hidden sm:inline-flex px-1.5 py-0.5 rounded bg-amber-100 hover:bg-amber-200 text-[#f97316] font-bold text-[9px] cursor-pointer transition-colors shrink-0"
                             title="Open Completed Project Archive"
                           >
                             Archive
@@ -1911,7 +1885,7 @@
                                 setSelectedProjCat(e.target.value);
                               }
                             }}
-                            className="bg-transparent text-slate-600 focus:outline-none text-[11px] cursor-pointer"
+                            className="bg-transparent text-slate-600 focus:outline-none text-[8.5px] sm:text-[9.5px] cursor-pointer"
                           >
                             <option value="__ADD_EDIT_CAT__">+ Category</option>
                             <option value="All">All Categories</option>
@@ -1921,7 +1895,7 @@
                           <select
                             value={sortProjectBy}
                             onChange={(e) => setSortProjectBy(e.target.value)}
-                            className="bg-transparent text-slate-500 focus:outline-none text-[11px] cursor-pointer"
+                            className="bg-transparent text-slate-500 focus:outline-none text-[8.5px] sm:text-[9.5px] cursor-pointer"
                             title="Sort Items By"
                           >
                             <option value="Date">Sort: Date</option>
@@ -1963,7 +1937,7 @@
                         isNew: true
                       })}
                       headerControls={
-                        <div className="flex items-center space-x-2 text-xs">
+                        <div className="flex items-center gap-1 sm:gap-1.5 text-[8.5px] sm:text-[9.5px]">
                           <select
                             value={selectedIdeaCat}
                             onChange={(e) => {
@@ -1974,7 +1948,7 @@
                                 setSelectedIdeaCat(e.target.value);
                               }
                             }}
-                            className="bg-transparent text-slate-600 focus:outline-none text-[11px] cursor-pointer"
+                            className="bg-transparent text-slate-600 focus:outline-none text-[8.5px] sm:text-[9.5px] cursor-pointer"
                           >
                             <option value="__ADD_EDIT_CAT__">+ Category</option>
                             <option value="All">All Categories</option>
@@ -1984,7 +1958,7 @@
                           <select
                             value={sortIdeaBy}
                             onChange={(e) => setSortIdeaBy(e.target.value)}
-                            className="bg-transparent text-slate-500 focus:outline-none text-[11px] cursor-pointer"
+                            className="bg-transparent text-slate-500 focus:outline-none text-[8.5px] sm:text-[9.5px] cursor-pointer"
                           >
                             <option value="Date">Sort: Date</option>
                             <option value="Title">Sort: Title</option>
@@ -2024,7 +1998,7 @@
                         <select
                           value={sortStudyBy}
                           onChange={(e) => setSortStudyBy(e.target.value)}
-                          className="bg-transparent text-slate-500 focus:outline-none text-[11px]"
+                          className="bg-transparent text-slate-500 focus:outline-none text-[8.5px] sm:text-[9.5px] cursor-pointer"
                         >
                           <option value="Date">Sort: Date</option>
                           <option value="Title">Sort: Title</option>
@@ -2060,7 +2034,7 @@
                         <select
                           value={sortMindsetBy}
                           onChange={(e) => setSortMindsetBy(e.target.value)}
-                          className="bg-transparent text-slate-500 focus:outline-none text-[11px]"
+                          className="bg-transparent text-slate-500 focus:outline-none text-[8.5px] sm:text-[9.5px] cursor-pointer"
                         >
                           <option value="Date">Sort: Date</option>
                           <option value="Title">Sort: Title</option>
@@ -2248,6 +2222,29 @@
             />
           )}
 
+          {/* MOVE TO MODAL */}
+          {isMoveToModalOpen && (
+            <MoveToModal
+              onClose={() => setIsMoveToModalOpen(false)}
+              user={user}
+              onExportCSV={handleExportCSV}
+              onOpenApiMcp={() => setIsApiMcpModalOpen(true)}
+              onOpenLogin={() => {
+                if (user && firebase.apps.length) {
+                  firebase.auth().signOut();
+                  showToast('Signed out successfully.');
+                } else {
+                  setIsLoginModalOpen(true);
+                }
+              }}
+              branding={branding}
+              platforms={platforms}
+              onOpenPlatforms={() => setIsPlatformModalOpen(true)}
+              onOpenCalendar={() => setIsCalendarModalOpen(true)}
+              onOpenArchive={() => setIsArchiveModalOpen(true)}
+            />
+          )}
+
           {/* ARCHIVE MODAL */}
           {isArchiveModalOpen && (
             <ArchiveModal
@@ -2369,7 +2366,7 @@
           <div className="sm:hidden fixed bottom-0 left-0 right-0 z-[60] bg-white/95 backdrop-blur-md border-t border-gray-200 py-1.5 px-3 flex justify-between items-center shadow-2xl">
             <button
               type="button"
-              onClick={() => setActiveModalItem({ type: 'ideas', item: { title: '', details: '', category: 'Business', stars: 1 }, isNew: true })}
+              onClick={() => setActiveSectionModal('ideas')}
               className="flex flex-col items-center justify-center flex-1 text-slate-600 hover:text-brandsky transition-colors cursor-pointer py-0.5"
             >
               <span className="font-bold text-xs leading-none bg-sky-100 text-brandsky px-2 py-0.5 rounded-full mb-0.5">[!]</span>
@@ -2378,7 +2375,7 @@
 
             <button
               type="button"
-              onClick={() => setActiveModalItem({ type: 'projects', item: { title: '', category: 'General', status: 'In Progress', progress: 0 }, isNew: true })}
+              onClick={() => setActiveSectionModal('projects')}
               className="flex flex-col items-center justify-center flex-1 text-slate-600 hover:text-brandsky transition-colors cursor-pointer py-0.5"
             >
               <span className="font-bold text-xs leading-none bg-sky-100 text-brandsky px-2 py-0.5 rounded-full mb-0.5">[+]</span>
@@ -2387,7 +2384,7 @@
 
             <button
               type="button"
-              onClick={() => setActiveModalItem({ type: 'studies', item: { title: '', details: '' }, isNew: true })}
+              onClick={() => setActiveSectionModal('studies')}
               className="flex flex-col items-center justify-center flex-1 text-slate-600 hover:text-brandsky transition-colors cursor-pointer py-0.5"
             >
               <span className="font-bold text-xs leading-none bg-sky-100 text-brandsky px-2 py-0.5 rounded-full mb-0.5">[#]</span>
@@ -2396,7 +2393,7 @@
 
             <button
               type="button"
-              onClick={() => setActiveModalItem({ type: 'mindsets', item: { title: '', details: '' }, isNew: true })}
+              onClick={() => setActiveSectionModal('mindsets')}
               className="flex flex-col items-center justify-center flex-1 text-slate-600 hover:text-brandsky transition-colors cursor-pointer py-0.5"
             >
               <span className="font-bold text-xs leading-none bg-sky-100 text-brandsky px-2 py-0.5 rounded-full mb-0.5">[-]</span>
@@ -2405,7 +2402,7 @@
 
             <button
               type="button"
-              onClick={() => setIsMobileMenuOpen(true)}
+              onClick={() => setIsMoveToModalOpen(true)}
               className="flex flex-col items-center justify-center flex-1 text-slate-600 hover:text-brandsky transition-colors cursor-pointer py-0.5"
             >
               <span className="font-bold text-xs leading-none bg-orange-100 text-[#f97316] px-2 py-0.5 rounded-full mb-0.5">[=]</span>
@@ -2419,116 +2416,68 @@
               onClick={(e) => { if (e.target === e.currentTarget) setIsMobileMenuOpen(false); }}
               className="fixed inset-0 z-[120] modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4"
             >
-              <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-sm w-full p-4 space-y-3 border border-gray-200 animate-slideUp">
-                <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                  <span className="font-bold text-sm text-darkslate flex items-center gap-1.5">
-                    <span>📋</span> Mobile Menu
-                  </span>
+              <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-sm w-full p-4 space-y-3 border border-gray-200 animate-slideUp text-xs">
+                {/* Header: Header Title REMOVED, only X close button */}
+                <div className="flex items-center justify-end border-b border-gray-100 pb-2">
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-slate-400 hover:text-darkslate text-sm font-bold cursor-pointer"
+                    className="text-slate-400 hover:text-darkslate text-xs font-bold cursor-pointer"
                   >
                     ✕
                   </button>
                 </div>
 
-                <div className="space-y-3 text-xs">
-                  {/* Section 1: Move To (Quadrant Jump) */}
-                  <div>
-                    <div className="font-bold text-gray-800 text-[11px] mb-1.5">Move To</div>
-                    <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2.5 py-1 text-xs">
+                  {/* Item 1: Move To */}
+                  <button
+                    onClick={() => { setIsMobileMenuOpen(false); setIsMoveToModalOpen(true); }}
+                    className="w-full p-2.5 bg-sky-50 hover:bg-sky-100 text-brandsky rounded-lg font-bold text-left flex items-center justify-between border border-sky-100 cursor-pointer text-xs"
+                  >
+                    <span>Move To</span>
+                    <span className="text-[10px] text-brandsky font-normal">Qubit / CEO Club / Newsletter / CSV / API ›</span>
+                  </button>
+
+                  {/* Item 2: my Platforms Section with Favicons & Edit */}
+                  <div className="p-2.5 bg-orange-50/80 rounded-lg border border-orange-100 space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#f97316]">my Platforms</span>
                       <button
-                        onClick={() => { scrollToBox('box-projects'); setIsMobileMenuOpen(false); }}
-                        className="p-2 bg-sky-50 hover:bg-sky-100 text-brandsky rounded-lg font-bold text-left flex items-center gap-1.5 cursor-pointer"
+                        onClick={() => { setIsMobileMenuOpen(false); setIsPlatformModalOpen(true); }}
+                        className="text-[#f97316] hover:underline font-bold text-xs cursor-pointer"
                       >
-                        <span>📁</span> Projects
+                        Edit
                       </button>
-                      <button
-                        onClick={() => { scrollToBox('box-ideas'); setIsMobileMenuOpen(false); }}
-                        className="p-2 bg-amber-50 hover:bg-amber-100 text-[#f97316] rounded-lg font-bold text-left flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <span>💡</span> Idea/ Insight
-                      </button>
-                      <button
-                        onClick={() => { scrollToBox('box-study'); setIsMobileMenuOpen(false); }}
-                        className="p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg font-bold text-left flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <span>🔬</span> Study/ RnD
-                      </button>
-                      <button
-                        onClick={() => { scrollToBox('box-mindset'); setIsMobileMenuOpen(false); }}
-                        className="p-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg font-bold text-left flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <span>🧘</span> Mindfulness
-                      </button>
+                    </div>
+
+                    {/* Pre-registered Domain Favicons & Sub-items */}
+                    <div className="flex items-center flex-wrap gap-2 pt-1 border-t border-orange-200/50">
+                      {platforms.length === 0 ? (
+                        <span className="text-slate-400 text-xs italic">No platforms configured.</span>
+                      ) : (
+                        groupPlatformsByDomain(platforms).map((group) => (
+                          <DomainFaviconGroup key={group.domainHost} group={group} />
+                        ))
+                      )}
                     </div>
                   </div>
 
-                  {/* Section 2: Shortcuts & Directives */}
-                  <div>
-                    <div className="font-bold text-gray-800 text-[11px] mb-1.5">Shortcuts & Tools</div>
-                    <div className="space-y-1.5">
-                      <button
-                        onClick={() => { setIsPlatformModalOpen(true); setIsMobileMenuOpen(false); }}
-                        className="w-full p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg font-normal text-left flex items-center justify-between border border-gray-100 cursor-pointer"
-                      >
-                        <span className="flex items-center gap-2">
-                          <span>🌐</span> my Platforms
-                        </span>
-                        <span className="text-grayholder text-[10px]">Manage Links ›</span>
-                      </button>
+                  {/* Item 3: Calendar */}
+                  <button
+                    onClick={() => { setIsMobileMenuOpen(false); setIsCalendarModalOpen(true); }}
+                    className="w-full p-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg font-bold text-left flex items-center justify-between border border-gray-100 cursor-pointer text-xs"
+                  >
+                    <span>Calendar</span>
+                    <span className="text-[10px] text-slate-500 font-normal">Timeline View ›</span>
+                  </button>
 
-                      <button
-                        onClick={() => { setIsCalendarModalOpen(true); setIsMobileMenuOpen(false); }}
-                        className="w-full p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg font-normal text-left flex items-center justify-between border border-gray-100 cursor-pointer"
-                      >
-                        <span className="flex items-center gap-2">
-                          <span>📅</span> Calendar
-                        </span>
-                        <span className="text-grayholder text-[10px]">Timeline View ›</span>
-                      </button>
-
-                      <button
-                        onClick={() => { setIsArchiveModalOpen(true); setIsMobileMenuOpen(false); }}
-                        className="w-full p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg font-normal text-left flex items-center justify-between border border-gray-100 cursor-pointer"
-                      >
-                        <span className="flex items-center gap-2">
-                          <span>📦</span> Archive
-                        </span>
-                        <span className="text-grayholder text-[10px]">Completed Projects ›</span>
-                      </button>
-
-                      <button
-                        onClick={() => { setIsApiKeyModalOpen(true); setIsMobileMenuOpen(false); }}
-                        className="w-full p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg font-normal text-left flex items-center justify-between border border-gray-100 cursor-pointer"
-                      >
-                        <span className="flex items-center gap-2">
-                          <span>🔑</span> My API Key
-                        </span>
-                        <span className="text-grayholder text-[10px]">Gemini Settings ›</span>
-                      </button>
-
-                      <button
-                        onClick={() => { setIsApiMcpModalOpen(true); setIsMobileMenuOpen(false); }}
-                        className="w-full p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg font-normal text-left flex items-center justify-between border border-gray-100 cursor-pointer"
-                      >
-                        <span className="flex items-center gap-2">
-                          <span>⚡</span> API / MCP Info
-                        </span>
-                        <span className="text-grayholder text-[10px]">Info & Endpoints ›</span>
-                      </button>
-
-                      <button
-                        onClick={() => { handleExportCSV(); setIsMobileMenuOpen(false); }}
-                        className="w-full p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg font-normal text-left flex items-center justify-between border border-gray-100 cursor-pointer"
-                      >
-                        <span className="flex items-center gap-2">
-                          <span>📊</span> Export CSV
-                        </span>
-                        <span className="text-grayholder text-[10px]">Download Data ›</span>
-                      </button>
-                    </div>
-                  </div>
+                  {/* Item 4: Archive */}
+                  <button
+                    onClick={() => { setIsMobileMenuOpen(false); setIsArchiveModalOpen(true); }}
+                    className="w-full p-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg font-bold text-left flex items-center justify-between border border-gray-100 cursor-pointer text-xs"
+                  >
+                    <span>Archive</span>
+                    <span className="text-[10px] text-slate-500 font-normal">Completed Projects ›</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -2537,84 +2486,163 @@
       );
     }
 
-    // --- DOMAIN FAVICON GROUP COMPONENT (Deduplicated Favicon per Domain with Hover & Auto-Dismiss Dropdown) ---
+    // --- DOMAIN FAVICON GROUP COMPONENT (Deduplicated Favicon per Domain with Hover & Touch Support) ---
     function DomainFaviconGroup({ group }) {
-      const [isHovered, setIsHovered] = useState(false);
+      const [isOpen, setIsOpen] = useState(false);
       const { domainHost, faviconUrl, items } = group;
+
+      const handleIconClick = (e) => {
+        e.stopPropagation();
+        if (items.length === 1 && items[0]?.href && items[0].href !== '#') {
+          window.open(items[0].href, '_blank', 'noopener,noreferrer');
+        } else {
+          setIsOpen(prev => !prev);
+        }
+      };
 
       return (
         <div
           className="relative inline-block shrink-0 overflow-visible"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+          onMouseEnter={() => setIsOpen(true)}
+          onMouseLeave={() => setIsOpen(false)}
         >
-          {/* Favicon Icon Trigger (Hover opens dropdown automatically, no sticky click state) */}
+          {/* Favicon Icon Trigger (Direct open if 1 link, Dropdown toggle if multiple) */}
           <div
-            className="p-[1.5px] hover:bg-slate-200/60 rounded transition-colors flex items-center space-x-0.5 cursor-pointer select-none"
+            onClick={handleIconClick}
+            className="p-1 hover:bg-slate-200/60 rounded transition-colors flex items-center space-x-0.5 cursor-pointer select-none active:scale-95"
             title={domainHost}
           >
             <img
               src={faviconUrl}
               alt={domainHost}
-              className="rounded-sm object-contain"
-              style={{ width: '12px', height: '12px' }}
+              className="rounded-sm object-contain pointer-events-none"
+              style={{ width: '14px', height: '14px' }}
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.src = 'https://www.google.com/s2/favicons?domain=google.com&sz=32';
               }}
             />
-            {items.length > 1 && <span className="text-[7.5px] text-grayholder">▾</span>}
+            {items.length > 1 && <span className="text-[8px] text-grayholder">▾</span>}
           </div>
 
-          {/* Hover & Auto-Dismiss Dropdown Menu */}
-          {isHovered && (
-            <div
-              className="absolute left-1/2 -translate-x-1/2 top-full pt-1 z-[100] min-w-[200px] max-w-xs transition-opacity duration-150"
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-            >
-              <div className="bg-white border border-gray-200 rounded-lg shadow-2xl py-1.5 text-xs overflow-hidden">
-                {/* Header showing Domain Name & Count */}
-                <div className="px-3 py-1 border-b border-gray-100 flex items-center justify-between gap-2 bg-slate-50/80">
-                  <span className="text-[10.5px] font-bold text-darkslate truncate capitalize">
-                    {domainHost}
-                  </span>
-                  <span className="text-[9.5px] font-bold text-brandsky bg-sky-50 px-1.5 py-0.5 rounded shrink-0">
-                    {items.length} {items.length === 1 ? 'platform' : 'platforms'}
-                  </span>
-                </div>
-
-                {/* List of Platform Links under this domain */}
-                <div className="py-1 max-h-56 overflow-y-auto">
-                  {items.map((item, idx) => (
-                    <a
-                      key={idx}
-                      href={item.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setIsHovered(false)}
-                      className="flex items-center justify-between gap-2 px-3 py-1.5 hover:bg-sky-50 text-[11px] text-slate-700 hover:text-brandsky transition-colors cursor-pointer border-b border-gray-50 last:border-none"
+          {isOpen && items.length > 0 && (
+            <>
+              {/* Mobile View: Dedicated Modal Dialog with Backdrop (Prevents touch dismissal bugs) */}
+              <div
+                onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
+                className="fixed inset-0 z-[290] bg-black/40 flex items-center justify-center p-4 sm:hidden animate-fadeIn"
+              >
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-white rounded-xl shadow-2xl w-full max-w-xs p-3 space-y-2 border border-gray-200 text-xs animate-slideUp max-h-[75vh] flex flex-col"
+                >
+                  <div className="flex items-center justify-between border-b border-gray-150 pb-2 shrink-0">
+                    <div className="flex items-center space-x-2 truncate">
+                      <img
+                        src={faviconUrl}
+                        alt=""
+                        className="w-4 h-4 rounded object-contain shrink-0"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://www.google.com/s2/favicons?domain=google.com&sz=32';
+                        }}
+                      />
+                      <span className="font-bold text-xs text-darkslate truncate capitalize">{domainHost}</span>
+                      <span className="text-[10px] font-bold text-brandsky bg-sky-50 px-1.5 py-0.5 rounded shrink-0">
+                        {items.length} {items.length === 1 ? 'platform' : 'platforms'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsOpen(false)}
+                      className="text-slate-400 hover:text-darkslate text-sm font-bold cursor-pointer p-1"
                     >
-                      <div className="truncate flex-1">
-                        <div className="font-bold text-darkslate text-[11.5px] truncate hover:text-brandsky">
-                          {item.title}
-                        </div>
-                        {item.href && item.href !== '#' && (
-                          <div className="text-[9.5px] text-grayholder truncate">
-                            {item.href}
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="py-1 max-h-60 overflow-y-auto space-y-1 flex-1">
+                    {items.map((item, idx) => (
+                      <a
+                        key={idx}
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center justify-between gap-2 p-2 hover:bg-sky-50 rounded text-xs text-slate-700 hover:text-brandsky transition-colors cursor-pointer border-b border-gray-50 last:border-none"
+                      >
+                        <div className="truncate flex-1">
+                          <div className="font-bold text-darkslate text-xs truncate hover:text-brandsky">
+                            {item.title}
                           </div>
+                          {item.href && item.href !== '#' && (
+                            <div className="text-[10px] text-grayholder truncate">
+                              {item.href}
+                            </div>
+                          )}
+                        </div>
+                        {item.category && (
+                          <span className="text-[10px] font-bold text-brandsky bg-sky-50 px-1.5 py-0.5 rounded shrink-0">
+                            {item.category}
+                          </span>
                         )}
-                      </div>
-                      {item.category && (
-                        <span className="text-[9.5px] font-bold text-brandsky bg-sky-50 px-1.5 py-0.5 rounded shrink-0">
-                          {item.category}
-                        </span>
-                      )}
-                    </a>
-                  ))}
+                      </a>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+
+              {/* Desktop View: Hover Dropdown Menu */}
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="hidden sm:block absolute left-1/2 -translate-x-1/2 top-full pt-1 z-[300] min-w-[220px] max-w-xs transition-opacity duration-150 shadow-2xl"
+                onMouseEnter={() => setIsOpen(true)}
+                onMouseLeave={() => setIsOpen(false)}
+              >
+                <div className="bg-white border border-gray-200 rounded-lg shadow-2xl py-1.5 text-xs overflow-hidden">
+                  <div className="px-3 py-1.5 border-b border-gray-100 flex items-center justify-between gap-2 bg-slate-50">
+                    <span className="text-xs font-bold text-darkslate truncate capitalize">
+                      {domainHost}
+                    </span>
+                    <button
+                      onClick={() => setIsOpen(false)}
+                      className="text-xs text-slate-400 hover:text-darkslate font-bold cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="py-1 max-h-56 overflow-y-auto">
+                    {items.map((item, idx) => (
+                      <a
+                        key={idx}
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center justify-between gap-2 px-3 py-2 hover:bg-sky-50 text-xs text-slate-700 hover:text-brandsky transition-colors cursor-pointer border-b border-gray-50 last:border-none"
+                      >
+                        <div className="truncate flex-1">
+                          <div className="font-bold text-darkslate text-xs truncate hover:text-brandsky">
+                            {item.title}
+                          </div>
+                          {item.href && item.href !== '#' && (
+                            <div className="text-[10px] text-grayholder truncate">
+                              {item.href}
+                            </div>
+                          )}
+                        </div>
+                        {item.category && (
+                          <span className="text-[10px] font-bold text-brandsky bg-sky-50 px-1.5 py-0.5 rounded shrink-0">
+                            {item.category}
+                          </span>
+                        )}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
           )}
         </div>
       );
@@ -2648,21 +2676,21 @@
           }`}
         >
           
-          {/* Box Header */}
-          <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-            <div className="flex items-center space-x-2">
-              <span className="font-bold text-[13px] text-brandsky">{title}</span>
+          {/* Box Header (Sticky & Responsive Flex Layout) */}
+          <div className="sticky top-0 bg-white z-20 flex items-center justify-between border-b border-gray-100 pb-2 pt-1 gap-1 sm:gap-2">
+            <div className="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
+              <span className="font-bold text-[9.5px] sm:text-[11px] text-brandsky">{title}</span>
               <button
                 onClick={(e) => { e.stopPropagation(); onAdd(); }}
-                className="px-1.5 py-0.5 rounded bg-sky-50 text-brandsky hover:bg-sky-100 text-xs font-bold transition-colors cursor-pointer"
+                className="px-1 py-0.2 rounded bg-sky-50 text-brandsky hover:bg-sky-100 text-[10px] sm:text-xs font-bold transition-colors cursor-pointer"
                 title="Add New Item"
               >
                 +
               </button>
-              <span className="text-[10.5px] text-grayholder">({count})</span>
+              <span className="text-[9px] sm:text-[10px] text-grayholder">({count})</span>
             </div>
 
-            <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-1 sm:gap-1.5 text-[8.5px] sm:text-[9.5px] shrink-0" onClick={(e) => e.stopPropagation()}>
               {headerControls}
             </div>
           </div>
@@ -2733,9 +2761,8 @@
                 <input
                   type="checkbox"
                   checked={isSelected}
-                  onChange={(e) => { e.stopPropagation(); onToggleSelect(); }}
-                  onClick={(e) => e.stopPropagation()}
-                  className="transform scale-90 rounded border-gray-300 text-brandsky focus:ring-brandsky cursor-pointer shrink-0"
+                  readOnly
+                  className="pointer-events-none transform scale-90 rounded border-gray-300 text-brandsky focus:ring-brandsky cursor-pointer shrink-0"
                 />
               </span>
               <span className="text-darkslate font-bold text-[12px] truncate">{title}</span>
@@ -2766,9 +2793,8 @@
                 <input
                   type="checkbox"
                   checked={isSelected}
-                  onChange={(e) => { e.stopPropagation(); onToggleSelect(); }}
-                  onClick={(e) => e.stopPropagation()}
-                  className="transform scale-95 rounded border-gray-300 text-brandsky focus:ring-brandsky cursor-pointer shrink-0"
+                  readOnly
+                  className="pointer-events-none transform scale-95 rounded border-gray-300 text-brandsky focus:ring-brandsky cursor-pointer shrink-0"
                 />
               </span>
               <span className="text-darkslate font-bold text-[12.5px] leading-snug flex-1 break-words">
@@ -2843,7 +2869,7 @@
           onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
           className="fixed inset-0 z-[80] modal-backdrop flex items-center justify-center p-4 overflow-y-auto"
         >
-          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-4 space-y-3 border border-gray-200 my-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-sm sm:max-w-md w-full p-4 space-y-3 border border-gray-200 my-auto max-h-[88vh] flex flex-col overflow-y-auto">
             
             {/* Modal Top Header */}
             <div className="flex items-center justify-between border-b border-gray-100 pb-2">
@@ -2868,37 +2894,18 @@
             {/* Modal Form Body */}
             <form onSubmit={(e) => { e.preventDefault(); onSave(type, form); }} className="space-y-2 text-[11.5px]">
               
-              {/* Row 1: Title + Status (Projects only) or normal Title block */}
+              {/* Row 1: Title (Status select removed as requested) */}
               {type === 'projects' ? (
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="col-span-2">
-                    <label className="block font-bold text-gray-800 text-[11px] mb-0.5">Title</label>
-                    <input
-                      type="text"
-                      required
-                      value={form.title || ''}
-                      onChange={(e) => handleChange('title', e.target.value)}
-                      placeholder="Enter title..."
-                      className="w-full h-8 px-2.5 py-1 border border-gray-200 rounded text-[11px] text-darkslate focus:outline-none focus:border-brandsky"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-bold text-gray-800 text-[11px] mb-0.5">Status</label>
-                    <select
-                      disabled={!form.startDate}
-                      value={form.status || 'In Progress'}
-                      onChange={(e) => handleStatusChange(e.target.value)}
-                      className={`w-full h-8 px-2 py-1 border rounded text-[11px] focus:outline-none ${
-                        !form.startDate
-                          ? 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed'
-                          : 'border-gray-200 text-darkslate'
-                      }`}
-                    >
-                      <option value="In Progress">In Progress</option>
-                      <option value="Completed">Completed</option>
-                      <option value="On Hold">On Hold</option>
-                    </select>
-                  </div>
+                <div>
+                  <label className="block font-bold text-gray-800 text-[11px] mb-0.5">Title</label>
+                  <input
+                    type="text"
+                    required
+                    value={form.title || ''}
+                    onChange={(e) => handleChange('title', e.target.value)}
+                    placeholder="Enter project title..."
+                    className="w-full h-8 px-2.5 py-1 border border-gray-200 bg-white rounded text-[11px] text-darkslate focus:outline-none focus:border-brandsky"
+                  />
                 </div>
               ) : (
                 /* Non-projects standard Title Row */
@@ -2910,7 +2917,7 @@
                     value={form.title || ''}
                     onChange={(e) => handleChange('title', e.target.value)}
                     placeholder="Enter title..."
-                    className="w-full px-2.5 py-1 border border-gray-200 rounded text-[11.5px] text-darkslate focus:outline-none focus:border-brandsky"
+                    className="w-full px-2.5 py-1 border border-gray-200 bg-white rounded text-[11.5px] text-darkslate focus:outline-none focus:border-brandsky"
                   />
                 </div>
               )}
@@ -2923,7 +2930,7 @@
                     <select
                       value={form.category || projectCategories[0]}
                       onChange={(e) => handleChange('category', e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded text-[11px] text-darkslate focus:outline-none"
+                      className="w-full px-2 py-1 border border-gray-200 bg-white rounded text-[11px] text-darkslate focus:outline-none focus:border-brandsky"
                     >
                       {projectCategories.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
@@ -2935,15 +2942,15 @@
                       value={form.company || ''}
                       onChange={(e) => handleChange('company', e.target.value)}
                       placeholder="Company/ D'pt name..."
-                      className="w-full px-2.5 py-1 border border-gray-200 rounded text-[11px] text-darkslate focus:outline-none"
+                      className="w-full px-2.5 py-1 border border-gray-200 bg-white rounded text-[11px] text-darkslate focus:outline-none focus:border-brandsky"
                     />
                   </div>
                 </div>
               )}
 
-              {/* Row 2: [Start Project] Button + Start Date + Target End Date (Projects only) */}
+              {/* Row 2: Action Button + Start Date + Target End Date (Projects only) */}
               {type === 'projects' && (
-                <div className="grid grid-cols-3 gap-2 items-end bg-sky-50/15 border border-sky-100 p-2 rounded-lg">
+                <div className="grid grid-cols-3 gap-2 items-end bg-white border border-gray-200 p-2 rounded-lg">
                   <div>
                     <label className="block font-bold text-gray-800 text-[10px] mb-0.5">Action</label>
                     <button
@@ -2958,23 +2965,38 @@
                             progress: prev.progress || 0,
                             targetEndDate: prev.targetEndDate || today
                           }));
+                        } else if (form.progress === 100 || form.status === 'Completed') {
+                          // Allow setting completed project back to In Progress
+                          setForm(prev => ({
+                            ...prev,
+                            progress: 99,
+                            status: 'In Progress',
+                            archived: false
+                          }));
                         } else {
+                          // Cancel / Reset
                           setForm(prev => ({
                             ...prev,
                             startDate: '',
                             targetEndDate: '',
                             progress: 0,
-                            status: 'In Progress'
+                            status: 'Not Started'
                           }));
                         }
                       }}
                       className={`w-full h-8 flex items-center justify-center rounded font-bold text-[10px] cursor-pointer transition-colors ${
-                        form.startDate
+                        form.progress === 100 || form.status === 'Completed'
+                          ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                          : form.startDate
                           ? 'bg-amber-100 hover:bg-amber-200 text-[#f97316]'
                           : 'bg-sky-500 hover:bg-sky-600 text-white'
                       }`}
                     >
-                      {form.startDate ? '✕ Cancel' : '▶ Start'}
+                      {form.progress === 100 || form.status === 'Completed'
+                        ? 'Complete'
+                        : form.startDate
+                        ? 'In Progress'
+                        : 'Start'}
                     </button>
                   </div>
                   <div>
@@ -2996,7 +3018,7 @@
                       className={`w-full h-8 px-1.5 py-1 border rounded text-[10px] font-sans focus:outline-none ${
                         !form.startDate
                           ? 'border-gray-100 bg-gray-50 text-gray-400'
-                          : 'border-gray-200 text-darkslate focus:border-brandsky'
+                          : 'border-gray-200 bg-white text-darkslate focus:border-brandsky'
                       }`}
                     />
                   </div>
@@ -3075,16 +3097,23 @@
                         const val = parseInt(e.target.value);
                         if (val === 100) {
                           setShowArchiveConfirm(true);
+                        } else if (val === 0) {
+                          setForm(prev => ({
+                            ...prev,
+                            progress: 0,
+                            status: 'Not Started',
+                            startDate: '',
+                            targetEndDate: '',
+                            archived: false
+                          }));
                         } else {
                           setForm(prev => ({
                             ...prev,
                             progress: val,
-                            status: val < 100 && prev.status === 'Completed' ? 'In Progress' : prev.status,
-                            archived: val < 100 ? false : prev.archived
+                            status: 'In Progress',
+                            archived: false
                           }));
-                          if (val < 100) {
-                            setPre100Progress(val);
-                          }
+                          setPre100Progress(val);
                         }
                       }}
                       className={`w-full cursor-pointer h-5 ${!form.startDate ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -3118,8 +3147,7 @@
                       <button
                         type="button"
                         onClick={() => {
-                          const prevVal = pre100Progress < 100 ? pre100Progress : 99;
-                          const updated = { ...form, progress: prevVal, status: 'In Progress', archived: false };
+                          const updated = { ...form, progress: 100, status: 'In Progress', archived: false };
                           setForm(updated);
                           setShowArchiveConfirm(false);
                         }}
@@ -3141,7 +3169,7 @@
                     value={form.objective || ''}
                     onChange={(e) => handleChange('objective', e.target.value)}
                     placeholder={OBJECTIVES_TEMPLATE}
-                    className="w-full px-2.5 py-1 border border-gray-200 rounded text-[11.5px] text-gray-500 font-sans focus:outline-none focus:border-brandsky leading-relaxed"
+                    className="w-full px-2.5 py-1 border border-gray-200 bg-white rounded text-[11.5px] text-gray-500 font-sans focus:outline-none focus:border-brandsky leading-relaxed"
                   />
                 </div>
               )}
@@ -3155,7 +3183,7 @@
                     value={form.aiPrompt || ''}
                     onChange={(e) => handleChange('aiPrompt', e.target.value)}
                     placeholder={AI_PROMPT_TEMPLATE}
-                    className="w-full px-2.5 py-1 border border-gray-200 rounded text-[11.5px] text-gray-500 font-sans focus:outline-none focus:border-brandsky leading-relaxed"
+                    className="w-full px-2.5 py-1 border border-gray-200 bg-white rounded text-[11.5px] text-gray-500 font-sans focus:outline-none focus:border-brandsky leading-relaxed"
                   />
                 </div>
               )}
@@ -3169,7 +3197,7 @@
                     value={form.details || ''}
                     onChange={(e) => handleChange('details', e.target.value)}
                     placeholder="Enter details..."
-                    className="w-full px-2.5 py-1 border border-gray-200 rounded text-[11.5px] text-darkslate focus:outline-none focus:border-brandsky"
+                    className="w-full px-2.5 py-1 border border-gray-200 bg-white rounded text-[11.5px] text-darkslate focus:outline-none focus:border-brandsky"
                   />
                 </div>
               )}
@@ -3182,21 +3210,21 @@
                   value={form.urls || ''}
                   onChange={(e) => handleChange('urls', e.target.value)}
                   placeholder="Enter multiple URLs separated by commas"
-                  className="w-full px-2.5 py-1 border border-gray-200 rounded text-[11.5px] text-slate-600 placeholder-gray-400 focus:outline-none"
+                  className="w-full px-2.5 py-1 border border-gray-200 bg-white rounded text-[11.5px] text-slate-600 placeholder-gray-400 focus:outline-none focus:border-brandsky"
                 />
                 
-                {/* Multi-URL Favicon Preview */}
+                {/* Multi-URL Favicon Preview (Solid bg-white background) */}
                 {form.urls && (
-                  <div className="mt-1.5 flex flex-wrap gap-1.5 text-[10.5px] bg-slate-50 p-1.5 rounded border border-gray-100">
+                  <div className="mt-1.5 flex flex-wrap gap-1.5 text-[10.5px] bg-white p-2 rounded border border-slate-200">
                     {parseDomainLinks(form.urls).map((link, i) => (
                       <a
                         key={i}
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center space-x-1 text-slate-700 hover:text-brandsky bg-white px-1.5 py-0.5 rounded border border-gray-200"
+                        className="inline-flex items-center space-x-1.5 text-slate-800 hover:text-brandsky bg-white px-2 py-0.5 rounded border border-slate-300 font-medium shadow-xs"
                       >
-                        <img src={link.faviconUrl} alt="" className="w-3 h-3 rounded-sm" />
+                        <img src={link.faviconUrl} alt="" className="w-3.5 h-3.5 rounded-sm" />
                         <span>{link.domain}</span>
                       </a>
                     ))}
@@ -3607,6 +3635,273 @@
               </div>
             )}
 
+          </div>
+        </div>
+      );
+    }
+
+    // --- MOVE TO MODAL COMPONENT ---
+    function MoveToModal({ onClose, user, onExportCSV, onOpenApiMcp, onOpenLogin, branding, platforms = [], onOpenPlatforms, onOpenCalendar, onOpenArchive }) {
+      const [activeSubTab, setActiveSubTab] = useState(null);
+
+      const titleText = branding?.title || 'CEO ActionNote';
+      const sloganText = branding?.slogan || 'Intelligence Workspace';
+
+      const getDomainHost = (urlStr) => {
+        if (!urlStr || urlStr === '#') return 'google.com';
+        try {
+          const parsed = new URL(urlStr.startsWith('http') ? urlStr : `https://${urlStr}`);
+          const cleanHost = parsed.hostname.replace(/^www\./, '');
+          const parts = cleanHost.split('.');
+          return parts.length >= 2 ? parts.slice(-2).join('.') : cleanHost;
+        } catch (e) {
+          return 'google.com';
+        }
+      };
+
+      const getFavicon = (domainHost) => {
+        return `https://www.google.com/s2/favicons?domain=${domainHost || 'google.com'}&sz=32`;
+      };
+
+      return (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+          className="fixed inset-0 z-[120] modal-backdrop flex items-center justify-center p-4"
+        >
+          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-3.5 space-y-2 border border-gray-200 text-[9px] animate-slideUp max-h-[85vh] flex flex-col">
+            {/* Header: CEO ActionNote Title & Slogan + Back & X Close Buttons */}
+            <div className="flex items-center justify-between border-b border-gray-150 pb-2 shrink-0">
+              <div className="flex items-center space-x-1.5 flex-wrap min-w-0 pr-2">
+                <span className="font-bold text-xs text-darkslate truncate">{titleText}</span>
+                <span className="text-[9px] text-grayholder font-normal truncate">| {sloganText}</span>
+              </div>
+              <div className="flex items-center space-x-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="text-slate-400 hover:text-darkslate text-xs font-bold cursor-pointer p-1"
+                  title="되돌아가기"
+                >
+                  &lt;
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="text-slate-400 hover:text-darkslate text-xs font-bold cursor-pointer p-1"
+                  title="팝업 닫기"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-1.5 py-1 text-[9px] overflow-y-auto flex-1 pr-0.5">
+              {/* Top Item 1: Calendar */}
+              <button
+                type="button"
+                onClick={() => { onClose(); if (onOpenCalendar) onOpenCalendar(); }}
+                className="w-full p-1.5 bg-sky-50 hover:bg-sky-100 text-brandsky rounded-lg font-bold text-left flex items-center justify-between border border-sky-100 cursor-pointer text-[9px]"
+              >
+                <span>Calendar</span>
+                <span className="text-sky-600 text-[8px]">Open ›</span>
+              </button>
+
+              {/* Top Item 2: Archive */}
+              <button
+                type="button"
+                onClick={() => { onClose(); if (onOpenArchive) onOpenArchive(); }}
+                className="w-full p-1.5 bg-sky-50 hover:bg-sky-100 text-brandsky rounded-lg font-bold text-left flex items-center justify-between border border-sky-100 cursor-pointer text-[9px]"
+              >
+                <span>Archive</span>
+                <span className="text-sky-600 text-[8px]">Open ›</span>
+              </button>
+
+              {/* 1. my Platforms */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setActiveSubTab(activeSubTab === 'platforms' ? null : 'platforms')}
+                  className="w-full p-1.5 bg-orange-50/80 hover:bg-orange-100/80 text-brandorange rounded-lg font-bold text-left flex items-center justify-between border border-orange-200 cursor-pointer text-[9px]"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <span>my Platforms</span>
+                    <span className="text-[8px] bg-orange-200/60 text-brandorange px-1.5 py-0.2 rounded font-normal">
+                      {platforms.length}
+                    </span>
+                  </span>
+                  <span className="text-[8px]">{activeSubTab === 'platforms' ? '▲' : '▼'}</span>
+                </button>
+                {activeSubTab === 'platforms' && (
+                  <div className="mt-1 ml-2 pl-2 border-l-2 border-orange-200 space-y-1 text-[8.5px]">
+                    {platforms.length === 0 ? (
+                      <p className="text-slate-400 text-[8.5px] italic py-1">No platforms registered.</p>
+                    ) : (
+                      platforms.map((plat) => {
+                        const url = plat.urls ? plat.urls.split(',')[0].trim() : '#';
+                        const domainHost = getDomainHost(url);
+                        const faviconUrl = getFavicon(domainHost);
+                        return (
+                          <div key={plat.id} className="flex items-center justify-between gap-2 p-1 hover:bg-orange-50 rounded">
+                            <a
+                              href={url !== '#' ? url : undefined}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 min-w-0 flex-1 hover:text-brandorange text-slate-700 cursor-pointer"
+                            >
+                              <img
+                                src={faviconUrl}
+                                alt=""
+                                className="w-3 h-3 rounded object-contain shrink-0"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = 'https://www.google.com/s2/favicons?domain=google.com&sz=32';
+                                }}
+                              />
+                              <span className="font-medium text-[8.5px] truncate">{plat.title || 'Platform'}</span>
+                            </a>
+                            {plat.category && (
+                              <span className="text-[8px] font-normal text-slate-400 shrink-0">
+                                {plat.category}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onOpenPlatforms();
+                      }}
+                      className="w-full text-left text-[8.5px] font-bold text-brandorange hover:underline pt-0.5 cursor-pointer flex items-center gap-1"
+                    >
+                      <span>✏️ Manage my Platforms</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* 2. Qubit */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setActiveSubTab(activeSubTab === 'qubit' ? null : 'qubit')}
+                  className="w-full p-1.5 bg-orange-50/70 hover:bg-orange-100/70 text-brandorangelight rounded-lg font-bold text-left flex items-center justify-between border border-orange-100 cursor-pointer text-[9px]"
+                >
+                  <span>Qubit</span>
+                  <span className="text-[8px]">{activeSubTab === 'qubit' ? '▲' : '▼'}</span>
+                </button>
+                {activeSubTab === 'qubit' && (
+                  <div className="mt-1 ml-2 pl-2 border-l-2 border-orange-200 space-y-0.5 text-[8.5px]">
+                    <a
+                      href="https://sc-sistarcompany.web.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block p-1 hover:bg-orange-50 text-slate-700 font-normal rounded text-[8.5px]"
+                    >
+                      Qubit Algorithm
+                    </a>
+                    <a
+                      href="https://sc-sistarcompany.web.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block p-1 hover:bg-orange-50 text-slate-700 font-normal rounded text-[8.5px]"
+                    >
+                      COSMO Seed Biz Models
+                    </a>
+                    <a
+                      href="https://sc-sistarcompany.web.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block p-1 hover:bg-orange-50 text-slate-700 font-normal rounded text-[8.5px]"
+                    >
+                      Scarlet Ai
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {/* 3. CEO Club */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setActiveSubTab(activeSubTab === 'ceoclub' ? null : 'ceoclub')}
+                  className="w-full p-1.5 bg-orange-50/70 hover:bg-orange-100/70 text-brandorangelight rounded-lg font-bold text-left flex items-center justify-between border border-orange-100 cursor-pointer text-[9px]"
+                >
+                  <span>CEO Club</span>
+                  <span className="text-[8px]">{activeSubTab === 'ceoclub' ? '▲' : '▼'}</span>
+                </button>
+                {activeSubTab === 'ceoclub' && (
+                  <div className="mt-1 ml-2 pl-2 border-l-2 border-orange-200 space-y-0.5 text-[8.5px]">
+                    <a
+                      href="https://sc-sistarcompany.web.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block p-1 hover:bg-orange-50 text-slate-700 font-normal rounded text-[8.5px]"
+                    >
+                      Qubit Synapse (*SC Knowledge Network)
+                    </a>
+                    <a
+                      href="https://sc-sistarcompany.web.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block p-1 hover:bg-orange-50 text-slate-700 font-normal rounded text-[8.5px]"
+                    >
+                      *SC CEO Members
+                    </a>
+                    <a
+                      href="https://sc-sistarcompany.web.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block p-1 hover:bg-orange-50 text-slate-700 font-normal rounded text-[8.5px]"
+                    >
+                      *SC Intelligence
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {/* 4. Newsletter */}
+              <button
+                type="button"
+                onClick={() => { window.location.href = 'news_letter.html'; onClose(); }}
+                className="w-full p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg font-bold text-left flex items-center justify-between border border-emerald-100 cursor-pointer text-[9px]"
+              >
+                <span>Newsletter</span>
+                <span className="text-emerald-600 text-[8px]">Go ›</span>
+              </button>
+
+              {/* 5. CSV */}
+              <button
+                type="button"
+                onClick={() => { onExportCSV(); onClose(); }}
+                className="w-full p-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg font-bold text-left flex items-center justify-between border border-gray-100 cursor-pointer text-[9px]"
+              >
+                <span>CSV Export</span>
+                <span className="text-grayholder text-[8px]">Download ›</span>
+              </button>
+
+              {/* 6. API/MCP */}
+              <button
+                type="button"
+                onClick={() => { onOpenApiMcp(); onClose(); }}
+                className="w-full p-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg font-bold text-left flex items-center justify-between border border-gray-100 cursor-pointer text-[9px]"
+              >
+                <span>API / MCP Info</span>
+                <span className="text-grayholder text-[8px]">Info & Endpoints ›</span>
+              </button>
+
+              {/* 7. Login / Logout */}
+              <button
+                type="button"
+                onClick={() => { onOpenLogin(); onClose(); }}
+                className="w-full p-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg font-bold text-left flex items-center justify-between border border-gray-100 cursor-pointer text-[9px]"
+              >
+                <span>{user ? 'Logout' : 'Login'}</span>
+                <span className="text-grayholder text-[8px]">{user ? 'Sign out' : 'Sign in'} ›</span>
+              </button>
+            </div>
           </div>
         </div>
       );
@@ -4872,6 +5167,7 @@
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').then((reg) => {
           console.log('[PWA] ServiceWorker registered with scope:', reg.scope);
+          reg.update();
         }).catch((err) => {
           console.warn('[PWA] ServiceWorker registration failed:', err);
         });
