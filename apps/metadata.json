@@ -1,0 +1,6 @@
+{
+  "name": "AI-CEO Executive Dashboard",
+  "description": "Classic Executive Journal & Portfolio Management System for 50s CEO",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
