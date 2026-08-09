@@ -2,17 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>CEO ActionNote | Intelligence Workspace</title>
   <meta name="application-name" content="CEO ActionNote | Intelligence Workspace" />
-  <meta name="apple-mobile-web-app-title" content="CEO ActionNote | Intelligence Workspace" />
-  <meta name="theme-color" content="#f8fafc" />
+  <meta name="apple-mobile-web-app-title" content="CEO ActionNote" />
+  <meta name="theme-color" content="#0ea5e9" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="mobile-web-app-capable" content="yes" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23f97316'/><text x='50%' y='55%' font-family='sans-serif' font-weight='bold' font-size='38' fill='white' text-anchor='middle' dominant-baseline='middle'>*SC</text></svg>" />
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23f97316'/><text x='50%' y='55%' font-family='sans-serif' font-weight='bold' font-size='38' fill='white' text-anchor='middle' dominant-baseline='middle'>*SC</text></svg>" />
-  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22CEO%20ActionNote%20%7C%20Intelligence%20Workspace%22%2C%22short_name%22%3A%22CEO%20ActionNote%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%23f8fafc%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Ccircle%20cx%3D%2750%27%20cy%3D%2750%27%20r%3D%2750%27%20fill%3D%27%2523f97316%27%2F%3E%3Ctext%20x%3D%2750%25%27%20y%3D%2755%25%27%20font-family%3D%27sans-serif%27%20font-weight%3D%27bold%27%20font-size%3D%2738%27%20fill%3D%27white%27%20text-anchor%3D%27middle%27%20dominant-baseline%3D%27middle%27%3E*SC%3C%2Ftext%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D" />
+  <link rel="manifest" href="/manifest.json" />
 
   <!-- Pretendard Font CDN -->
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
@@ -64,6 +64,29 @@
     .modal-backdrop {
       background-color: rgba(15, 23, 42, 0.45);
       backdrop-filter: blur(4px);
+    }
+
+    @media (max-width: 768px) {
+      .modal-backdrop {
+        align-items: flex-end !important;
+        padding: 0 !important;
+      }
+      .modal-backdrop > div {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        border-top-left-radius: 1.25rem !important;
+        border-top-right-radius: 1.25rem !important;
+        max-height: 88vh !important;
+        margin-bottom: 0 !important;
+        animation: slideUpSheet 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+    }
+
+    @keyframes slideUpSheet {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
     }
 
     input[type=range] {
@@ -469,6 +492,9 @@
       const [pageIdeas, setPageIdeas] = useState(0);
       const [pageStudies, setPageStudies] = useState(0);
       const [pageMindsets, setPageMindsets] = useState(0);
+
+      // Mobile Navigation Tab State
+      const [mobileActiveTab, setMobileActiveTab] = useState('home'); // 'home' | 'calendar' | 'archive' | 'apikey'
 
       // Modal Control States
       const [activeSectionModal, setActiveSectionModal] = useState(null); // 'projects' | 'ideas' | 'studies' | 'mindsets' | null
@@ -1705,10 +1731,84 @@
           </main>
 
           {/* Bottom Centered Feedback Message (Centered, Gray, Normal Font Weight) */}
-          <div className="max-w-6xl mx-auto px-4 py-3 text-center">
+          <div className="max-w-6xl mx-auto px-4 py-3 text-center pb-20 md:pb-4">
             <div className="text-center font-normal text-slate-500 text-[10.5px] sm:text-[11px] max-w-lg mx-auto w-full">
               * Feel Free to Contact us, for our Quick Upgrade for You- CEO
             </div>
+          </div>
+
+          {/* MOBILE BOTTOM NAVIGATION BAR (Fixed at bottom for Mobile <= 768px - PWA Native App Style) */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-xl md:hidden flex items-center justify-around h-16 px-2">
+            {/* 1. [🏠 홈] */}
+            <button
+              type="button"
+              onClick={() => {
+                setMobileActiveTab('home');
+                setIsCalendarModalOpen(false);
+                setIsArchiveModalOpen(false);
+                setIsApiKeyModalOpen(false);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={`flex flex-col items-center justify-center flex-1 h-full cursor-pointer transition-colors min-h-[44px] min-w-[44px] ${
+                mobileActiveTab === 'home' && !isCalendarModalOpen && !isArchiveModalOpen && !isApiKeyModalOpen
+                  ? 'text-brandsky font-bold'
+                  : 'text-slate-500 hover:text-slate-800 font-normal'
+              }`}
+            >
+              <span className="text-xl leading-none">🏠</span>
+              <span className="text-[10.5px] mt-0.5 font-medium">홈</span>
+            </button>
+
+            {/* 2. [📅 달력] */}
+            <button
+              type="button"
+              onClick={() => {
+                setMobileActiveTab('calendar');
+                setIsCalendarModalOpen(true);
+              }}
+              className={`flex flex-col items-center justify-center flex-1 h-full cursor-pointer transition-colors min-h-[44px] min-w-[44px] ${
+                isCalendarModalOpen || mobileActiveTab === 'calendar'
+                  ? 'text-brandsky font-bold'
+                  : 'text-slate-500 hover:text-slate-800 font-normal'
+              }`}
+            >
+              <span className="text-xl leading-none">📅</span>
+              <span className="text-[10.5px] mt-0.5 font-medium">달력</span>
+            </button>
+
+            {/* 3. [📦 보관함] */}
+            <button
+              type="button"
+              onClick={() => {
+                setMobileActiveTab('archive');
+                setIsArchiveModalOpen(true);
+              }}
+              className={`flex flex-col items-center justify-center flex-1 h-full cursor-pointer transition-colors min-h-[44px] min-w-[44px] ${
+                isArchiveModalOpen || mobileActiveTab === 'archive'
+                  ? 'text-brandsky font-bold'
+                  : 'text-slate-500 hover:text-slate-800 font-normal'
+              }`}
+            >
+              <span className="text-xl leading-none">📦</span>
+              <span className="text-[10.5px] mt-0.5 font-medium">보관함</span>
+            </button>
+
+            {/* 4. [🔑 AI 키] */}
+            <button
+              type="button"
+              onClick={() => {
+                setMobileActiveTab('apikey');
+                setIsApiKeyModalOpen(true);
+              }}
+              className={`flex flex-col items-center justify-center flex-1 h-full cursor-pointer transition-colors min-h-[44px] min-w-[44px] ${
+                isApiKeyModalOpen || mobileActiveTab === 'apikey'
+                  ? 'text-brandsky font-bold'
+                  : 'text-slate-500 hover:text-slate-800 font-normal'
+              }`}
+            >
+              <span className="text-xl leading-none">🔑</span>
+              <span className="text-[10.5px] mt-0.5 font-medium">AI 키</span>
+            </button>
           </div>
 
           {/* SECTION ZONE POPUP MODAL (Focus view for single zone) */}
@@ -4581,6 +4681,17 @@
           </div>
         </div>
       );
+    }
+
+    // Register PWA Service Worker for Offline & Fast App Launch
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+          console.log('[PWA] ServiceWorker registered with scope:', reg.scope);
+        }).catch((err) => {
+          console.warn('[PWA] ServiceWorker registration failed:', err);
+        });
+      });
     }
 
     // Render React App to Root
