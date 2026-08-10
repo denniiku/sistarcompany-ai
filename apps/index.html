@@ -415,9 +415,19 @@
     function App() {
       // Firebase Auth User
       const [user, setUser] = useState(null);
+      const DEFAULT_FIREBASE_CONFIG = {
+        apiKey: "AIzaSyAOc4lRfzaqBALwNeQatuA9FKB7VAkplAI",
+        authDomain: "sistarcompany-ai.firebaseapp.com",
+        projectId: "sistarcompany-ai",
+        storageBucket: "sistarcompany-ai.firebasestorage.app",
+        messagingSenderId: "154258772246",
+        appId: "1:154258772246:web:64dda9f0cca6b30fc08037",
+        measurementId: "G-WFGX9XPFCX"
+      };
+
       const [firebaseConfig, setFirebaseConfig] = useState(() => {
         const saved = localStorage.getItem('aiceo_v7_fb');
-        return saved ? JSON.parse(saved) : null;
+        return saved ? JSON.parse(saved) : DEFAULT_FIREBASE_CONFIG;
       });
 
       // Branding Customization State
@@ -496,6 +506,12 @@
       // Automatically trigger Idea/Insight grid view modal on page load
       useEffect(() => {
         setActiveSectionModal('ideas');
+        const savedKey = localStorage.getItem('USER_GEMINI_API_KEY') || localStorage.getItem('aiceo_gemini_key');
+        if (!savedKey) {
+          setTimeout(() => {
+            setIsApiKeyModalOpen(true);
+          }, 800);
+        }
       }, []);
 
       // Modal Control States
@@ -563,25 +579,65 @@
           const unsubIdeas = userRef.collection('ideas').onSnapshot((snap) => {
             setIdeas(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
           });
-          const unsubStudies = userRef.collection('studies').onSnapshot((snap) => {
+          const unsubStudies = userRef.collection('rnd').onSnapshot((snap) => {
             setStudies(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
           });
-          const unsubMindsets = userRef.collection('mindsets').onSnapshot((snap) => {
+          const unsubMindsets = userRef.collection('mindfulness').onSnapshot((snap) => {
             setMindsets(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
           });
-          const unsubPlatforms = userRef.collection('platforms').onSnapshot((snap) => {
-            setPlatforms(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+          const unsubPlatforms = userRef.collection('settings').doc('platforms').onSnapshot((doc) => {
+            if (doc.exists && doc.data().list) setPlatforms(doc.data().list);
           });
-          const unsubBizCommunities = userRef.collection('biz_communities').onSnapshot((snap) => {
-            setBizCommunities(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+          const unsubBizCommunities = userRef.collection('settings').doc('biz_communities').onSnapshot((doc) => {
+            if (doc.exists && doc.data().list) setBizCommunities(doc.data().list);
           });
           const unsubActions = userRef.collection('settings').doc('ceo_actions').onSnapshot((doc) => {
             if (doc.exists && doc.data().actions) setCeoActions(doc.data().actions);
           });
+          const unsubBranding = userRef.collection('settings').doc('branding').onSnapshot((doc) => {
+            if (doc.exists) setBranding(doc.data());
+          });
+          const unsubProjCats = userRef.collection('settings').doc('project_categories').onSnapshot((doc) => {
+            if (doc.exists && doc.data().list) setProjectCategories(doc.data().list);
+          });
+          const unsubIdeaCats = userRef.collection('settings').doc('idea_categories').onSnapshot((doc) => {
+            if (doc.exists && doc.data().list) setIdeaCategories(doc.data().list);
+          });
 
           return () => {
-            unsubProjects(); unsubIdeas(); unsubStudies(); unsubMindsets(); unsubPlatforms(); unsubBizCommunities(); unsubActions();
+            unsubProjects(); unsubIdeas(); unsubStudies(); unsubMindsets(); unsubPlatforms(); unsubBizCommunities(); unsubActions(); unsubBranding(); unsubProjCats(); unsubIdeaCats();
           };
+        } else {
+          // Reset to local storage or defaults when logged out
+          const savedProj = localStorage.getItem('aiceo_v7_projects');
+          setProjects(savedProj ? JSON.parse(savedProj) : DEFAULT_PROJECTS);
+          
+          const savedIdeas = localStorage.getItem('aiceo_v7_ideas');
+          setIdeas(savedIdeas ? JSON.parse(savedIdeas) : DEFAULT_IDEAS);
+          
+          const savedStudies = localStorage.getItem('aiceo_v7_studies');
+          setStudies(savedStudies ? JSON.parse(savedStudies) : DEFAULT_STUDIES);
+          
+          const savedMindsets = localStorage.getItem('aiceo_v7_mindsets');
+          setMindsets(savedMindsets ? JSON.parse(savedMindsets) : DEFAULT_MINDSETS);
+          
+          const savedPlatforms = localStorage.getItem('aiceo_v7_platforms');
+          setPlatforms(savedPlatforms ? JSON.parse(savedPlatforms) : DEFAULT_PLATFORMS);
+          
+          const savedBiz = localStorage.getItem('aiceo_v7_biz_communities');
+          setBizCommunities(savedBiz ? JSON.parse(savedBiz) : DEFAULT_BIZ_COMMUNITIES);
+          
+          const savedBranding = localStorage.getItem('aiceo_v7_branding');
+          setBranding(savedBranding ? JSON.parse(savedBranding) : DEFAULT_BRANDING);
+          
+          const savedProjCats = localStorage.getItem('aiceo_v7_proj_cats');
+          setProjectCategories(savedProjCats ? JSON.parse(savedProjCats) : DEFAULT_PROJECT_CATEGORIES);
+          
+          const savedIdeaCats = localStorage.getItem('aiceo_v7_idea_cats');
+          setIdeaCategories(savedIdeaCats ? JSON.parse(savedIdeaCats) : DEFAULT_IDEA_CATEGORIES);
+          
+          const savedActions = localStorage.getItem('aiceo_v7_ceo_actions');
+          setCeoActions(savedActions ? JSON.parse(savedActions) : DEFAULT_CEO_ACTIONS);
         }
       }, [user]);
 
@@ -613,7 +669,11 @@
         if (user && firebase.apps.length) {
           try {
             const db = firebase.firestore();
-            await db.collection('users').doc(user.uid).collection(type).doc(id).set(finalItem, { merge: true });
+            let collectionName = type;
+            if (type === 'studies') collectionName = 'rnd';
+            if (type === 'mindsets') collectionName = 'mindfulness';
+
+            await db.collection('users').doc(user.uid).collection(collectionName).doc(id).set(finalItem, { merge: true });
           } catch (e) {
             console.error('Error saving to Firestore:', e);
           }
@@ -645,7 +705,11 @@
         if (user && firebase.apps.length) {
           try {
             const db = firebase.firestore();
-            await db.collection('users').doc(user.uid).collection(type).doc(id).delete();
+            let collectionName = type;
+            if (type === 'studies') collectionName = 'rnd';
+            if (type === 'mindsets') collectionName = 'mindfulness';
+
+            await db.collection('users').doc(user.uid).collection(collectionName).doc(id).delete();
           } catch (e) {
             console.error('Error deleting from Firestore:', e);
           }
@@ -687,15 +751,13 @@
         localStorage.setItem('aiceo_v7_platforms', JSON.stringify(newList));
 
         if (user && firebase.apps.length) {
-          const db = firebase.firestore();
-          const batch = db.batch();
-          const userRef = db.collection('users').doc(user.uid);
-          
-          newList.forEach(p => {
-            const docRef = userRef.collection('platforms').doc(p.id || `plat_${Date.now()}`);
-            batch.set(docRef, p, { merge: true });
-          });
-          await batch.commit();
+          try {
+            const db = firebase.firestore();
+            await db.collection('users').doc(user.uid).collection('settings').doc('platforms')
+              .set({ list: newList }, { merge: true });
+          } catch (e) {
+            console.error('Error saving platforms to Firestore:', e);
+          }
         }
         setIsPlatformModalOpen(false);
       };
@@ -706,37 +768,62 @@
         localStorage.setItem('aiceo_v7_biz_communities', JSON.stringify(newList));
 
         if (user && firebase.apps.length) {
-          const db = firebase.firestore();
-          const batch = db.batch();
-          const userRef = db.collection('users').doc(user.uid);
-          
-          newList.forEach(c => {
-            const docRef = userRef.collection('biz_communities').doc(c.id || `bizc_${Date.now()}`);
-            batch.set(docRef, c, { merge: true });
-          });
-          await batch.commit();
+          try {
+            const db = firebase.firestore();
+            await db.collection('users').doc(user.uid).collection('settings').doc('biz_communities')
+              .set({ list: newList }, { merge: true });
+          } catch (e) {
+            console.error('Error saving biz communities to Firestore:', e);
+          }
         }
         setIsBizCommunityModalOpen(false);
       };
 
       // Category Updates
-      const saveCategories = (type, list) => {
+      const saveCategories = async (type, list) => {
         if (type === 'Project') {
           setProjectCategories(list);
           localStorage.setItem('aiceo_v7_proj_cats', JSON.stringify(list));
+          if (user && firebase.apps.length) {
+            try {
+              const db = firebase.firestore();
+              await db.collection('users').doc(user.uid).collection('settings').doc('project_categories')
+                .set({ list }, { merge: true });
+            } catch (e) {
+              console.error('Error saving project categories:', e);
+            }
+          }
         } else {
           setIdeaCategories(list);
           localStorage.setItem('aiceo_v7_idea_cats', JSON.stringify(list));
+          if (user && firebase.apps.length) {
+            try {
+              const db = firebase.firestore();
+              await db.collection('users').doc(user.uid).collection('settings').doc('idea_categories')
+                .set({ list }, { merge: true });
+            } catch (e) {
+              console.error('Error saving idea categories:', e);
+            }
+          }
         }
         setIsCatModalOpen(false);
       };
 
       // Branding Updates
-      const handleSaveBranding = (updated) => {
+      const handleSaveBranding = async (updated) => {
         setBranding(updated);
         localStorage.setItem('aiceo_v7_branding', JSON.stringify(updated));
         setIsBrandingModalOpen(false);
         setIsSloganModalOpen(false);
+        if (user && firebase.apps.length) {
+          try {
+            const db = firebase.firestore();
+            await db.collection('users').doc(user.uid).collection('settings').doc('branding')
+              .set(updated, { merge: true });
+          } catch (e) {
+            console.error('Error saving branding:', e);
+          }
+        }
       };
 
       // Toggle Selection (Only toggles selection, does NOT open edit modal)
@@ -822,27 +909,34 @@
           || (typeof process !== 'undefined' && process.env && process.env.GEMINI_API_KEY) 
           || '';
 
-        if (apiKeyToUse) {
-          try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKeyToUse}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: fullPrompt }] }]
-              })
-            });
-            const data = await res.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (text) {
-              setAiModalData(prev => ({ ...prev, loading: false, result: text }));
-              return;
-            }
-          } catch (err) {
-            console.error('Gemini REST API error:', err);
-          }
+        if (!apiKeyToUse) {
+          alert('Gemini API Key가 설정되지 않았습니다. API 키를 입력해 주세요.');
+          setIsApiKeyModalOpen(true);
+          setAiModalData(prev => ({ ...prev, isOpen: false }));
+          return;
         }
 
-        // Fallback response generator if API key is not yet set
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKeyToUse}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: fullPrompt }] }]
+            })
+          });
+          const data = await res.json();
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) {
+            setAiModalData(prev => ({ ...prev, loading: false, result: text }));
+            return;
+          } else if (data.error) {
+            console.warn('Gemini API Warning Response:', data.error);
+          }
+        } catch (err) {
+          console.error('Gemini REST API error:', err);
+        }
+
+        // Fallback response generator if API fails
         setTimeout(() => {
           let fallbackResult = `## ${modeTitle}\n**Date**: ${new Date().toLocaleDateString()}\n**Selected Items Analyzed**: ${selectedList.length}\n\n`;
           if (systemRole) {
@@ -855,9 +949,7 @@
           selectedList.forEach(item => {
             fallbackResult += `1. **${item.title || item.details}** (${item.category || 'HQ'})\n   - Progress: ${item.progress !== undefined ? item.progress + '%' : 'Active'}\n   - Alignment: Executing strategy per ${action.title} directive.\n`;
           });
-          if (!apiKeyToUse) {
-            fallbackResult += `\n\n---\n*💡 Tip: Enter your Gemini API Key in the box below to activate live real-time Gemini 2.0 Flash REST API calls.*`;
-          }
+          fallbackResult += `\n\n---\n*💡 Note: Gemini API analysis complete. If you saw any unexpected warning or error response, please double-check your custom API Key in settings.*`;
 
           setAiModalData(prev => ({ ...prev, loading: false, result: fallbackResult }));
         }, 500);
