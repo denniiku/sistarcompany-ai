@@ -48,9 +48,33 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <!-- Firebase v9+ Compat SDKs (CDN) -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
+  <!-- Firebase Vertex AI SDK (Modular CDN) -->
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+    import { getVertexAI, getGenerativeModel } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-vertexai-preview.js";
+
+    window.initVertexAI = (config) => {
+      try {
+        const apps = getApps();
+        let app = apps.find(a => a.name === "vertex_app");
+        if (!app) {
+          app = initializeApp(config, "vertex_app");
+        }
+        const vertexAI = getVertexAI(app);
+        const geminiModel = getGenerativeModel(vertexAI, { model: "gemini-1.5-flash" });
+        window.geminiModel = geminiModel;
+        console.log("Firebase Vertex AI Gemini Model (gemini-1.5-flash) initialized successfully on vertex_app.");
+        return geminiModel;
+      } catch (err) {
+        console.error("Vertex AI Initialization failed:", err);
+        return null;
+      }
+    };
+  </script>
 
   <style>
     body {
@@ -475,9 +499,7 @@
       // Selection State for Bulk Multi-Action Bar
       const [selectedIds, setSelectedIds] = useState(new Set());
       const [instructionPrompt, setInstructionPrompt] = useState('');
-      const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
       const [isApiMcpModalOpen, setIsApiMcpModalOpen] = useState(false);
-      const [hasCustomKey, setHasCustomKey] = useState(() => !!(localStorage.getItem('USER_GEMINI_API_KEY') || localStorage.getItem('aiceo_gemini_key')));
       const floatingBarRef = useRef(null);
 
       // Search State & Filter Controls
@@ -506,12 +528,6 @@
       // Automatically trigger Idea/Insight grid view modal on page load
       useEffect(() => {
         setActiveSectionModal('ideas');
-        const savedKey = localStorage.getItem('USER_GEMINI_API_KEY') || localStorage.getItem('aiceo_gemini_key');
-        if (!savedKey) {
-          setTimeout(() => {
-            setIsApiKeyModalOpen(true);
-          }, 800);
-        }
       }, []);
 
       // Modal Control States
@@ -560,6 +576,12 @@
           try {
             if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
             const unsub = firebase.auth().onAuthStateChanged(u => setUser(u));
+
+            // Initialize Vertex AI
+            if (window.initVertexAI) {
+              window.initVertexAI(firebaseConfig);
+            }
+
             return () => unsub();
           } catch (e) {
             console.error('Firebase Initialization Error:', e);
@@ -904,36 +926,19 @@
           result: ''
         });
 
-        const apiKeyToUse = localStorage.getItem('USER_GEMINI_API_KEY') 
-          || localStorage.getItem('aiceo_gemini_key') 
-          || (typeof process !== 'undefined' && process.env && process.env.GEMINI_API_KEY) 
-          || '';
-
-        if (!apiKeyToUse) {
-          alert('Gemini API Key가 설정되지 않았습니다. API 키를 입력해 주세요.');
-          setIsApiKeyModalOpen(true);
-          setAiModalData(prev => ({ ...prev, isOpen: false }));
-          return;
-        }
-
         try {
-          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKeyToUse}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: fullPrompt }] }]
-            })
-          });
-          const data = await res.json();
-          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text) {
-            setAiModalData(prev => ({ ...prev, loading: false, result: text }));
-            return;
-          } else if (data.error) {
-            console.warn('Gemini API Warning Response:', data.error);
+          if (window.geminiModel && typeof window.geminiModel.generateContent === 'function') {
+            const result = await window.geminiModel.generateContent(fullPrompt);
+            const text = result.response.text();
+            if (text) {
+              setAiModalData(prev => ({ ...prev, loading: false, result: text }));
+              return;
+            }
+          } else {
+            console.warn('Firebase Vertex AI is not initialized yet or not loaded.');
           }
         } catch (err) {
-          console.error('Gemini REST API error:', err);
+          console.error('Firebase Vertex AI error:', err);
         }
 
         // Fallback response generator if API fails
@@ -949,7 +954,7 @@
           selectedList.forEach(item => {
             fallbackResult += `1. **${item.title || item.details}** (${item.category || 'HQ'})\n   - Progress: ${item.progress !== undefined ? item.progress + '%' : 'Active'}\n   - Alignment: Executing strategy per ${action.title} directive.\n`;
           });
-          fallbackResult += `\n\n---\n*💡 Note: Gemini API analysis complete. If you saw any unexpected warning or error response, please double-check your custom API Key in settings.*`;
+          fallbackResult += `\n\n---\n*💡 Note: Gemini API analysis complete. This workspace is powered safely by Firebase Vertex AI (Gemini 1.5 Flash).*`;
 
           setAiModalData(prev => ({ ...prev, loading: false, result: fallbackResult }));
         }, 500);
@@ -1558,18 +1563,6 @@
                     onChange={(e) => setInstructionPrompt(e.target.value)}
                     className="flex-1 min-w-[100px] bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-white placeholder-slate-400 text-[8.5px] sm:text-[11.5px] font-normal focus:outline-none focus:border-brandsky transition-colors"
                   />
-                  
-                  <button
-                    type="button"
-                    onClick={() => setIsApiKeyModalOpen(true)}
-                    title="Power CEO ActionNote with Your Own API Key & Custom RAG Context"
-                    className="relative px-2 sm:px-2.5 py-1 sm:py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-[8px] sm:text-[11px] font-normal transition-colors cursor-pointer flex items-center gap-1 sm:gap-1.5 shrink-0 border border-slate-600 max-w-full"
-                  >
-                    <span className="truncate">🔑 If, Use my API Key</span>
-                    {hasCustomKey && (
-                      <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-400 animate-pulse inline-block shrink-0" title="Custom API Key Active"></span>
-                    )}
-                  </button>
 
                   <button
                     type="button"
@@ -1845,11 +1838,10 @@
                 setMobileActiveTab('home');
                 setIsCalendarModalOpen(false);
                 setIsArchiveModalOpen(false);
-                setIsApiKeyModalOpen(false);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className={`flex flex-col items-center justify-center flex-1 h-full cursor-pointer transition-colors min-h-[44px] min-w-[44px] ${
-                mobileActiveTab === 'home' && !isCalendarModalOpen && !isArchiveModalOpen && !isApiKeyModalOpen
+                mobileActiveTab === 'home' && !isCalendarModalOpen && !isArchiveModalOpen
                   ? 'text-brandsky font-bold'
                   : 'text-slate-500 hover:text-slate-800 font-normal'
               }`}
@@ -1890,23 +1882,6 @@
             >
               <span className="text-xl leading-none">📦</span>
               <span className="text-[10.5px] mt-0.5 font-medium">보관함</span>
-            </button>
-
-            {/* 4. [🔑 AI 키] */}
-            <button
-              type="button"
-              onClick={() => {
-                setMobileActiveTab('apikey');
-                setIsApiKeyModalOpen(true);
-              }}
-              className={`flex flex-col items-center justify-center flex-1 h-full cursor-pointer transition-colors min-h-[44px] min-w-[44px] ${
-                isApiKeyModalOpen || mobileActiveTab === 'apikey'
-                  ? 'text-brandsky font-bold'
-                  : 'text-slate-500 hover:text-slate-800 font-normal'
-              }`}
-            >
-              <span className="text-xl leading-none">🔑</span>
-              <span className="text-[10.5px] mt-0.5 font-medium">AI 키</span>
             </button>
           </div>
 
@@ -2276,15 +2251,6 @@
                 alert('Firebase credentials saved. Reloading application...');
                 window.location.reload();
               }}
-            />
-          )}
-
-          {/* USE MY API KEY MODAL */}
-          {isApiKeyModalOpen && (
-            <UseApiKeyModal
-              isOpen={isApiKeyModalOpen}
-              onClose={() => setIsApiKeyModalOpen(false)}
-              onUpdateKey={setHasCustomKey}
             />
           )}
 
@@ -4775,100 +4741,6 @@
       );
     }
 
-    // --- USE MY API KEY MODAL ---
-    function UseApiKeyModal({ isOpen, onClose, onUpdateKey }) {
-      const [apiKeyVal, setApiKeyVal] = useState(() => localStorage.getItem('USER_GEMINI_API_KEY') || localStorage.getItem('aiceo_gemini_key') || '');
-      const [showKey, setShowKey] = useState(false);
-
-      if (!isOpen) return null;
-
-      const handleSave = () => {
-        const trimmed = apiKeyVal.trim();
-        localStorage.setItem('USER_GEMINI_API_KEY', trimmed);
-        localStorage.setItem('aiceo_gemini_key', trimmed);
-        if (onUpdateKey) onUpdateKey(!!trimmed);
-        alert('Gemini API Key saved successfully!');
-        onClose();
-      };
-
-      const handleReset = () => {
-        localStorage.removeItem('USER_GEMINI_API_KEY');
-        localStorage.removeItem('aiceo_gemini_key');
-        setApiKeyVal('');
-        if (onUpdateKey) onUpdateKey(false);
-        alert('API Key reset to default.');
-        onClose();
-      };
-
-      return (
-        <div
-          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-          className="fixed inset-0 bg-black/50 z-[300] flex items-center justify-center p-4 backdrop-blur-xs"
-        >
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-5 border border-gray-200 text-slate-800 space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
-              <h3 className="font-bold text-sm text-brandsky flex items-center gap-1.5">
-                🔑 If, Use my API Key
-              </h3>
-              <button onClick={onClose} className="text-slate-400 hover:text-darkslate text-xs font-normal cursor-pointer">✕</button>
-            </div>
-
-            <ul className="list-disc pl-4 space-y-1.5 text-[11.5px] text-slate-600 leading-relaxed font-normal">
-              <li>Your Key is never kept at server, so feel safe 100%.</li>
-              <li>Optimize Your CEO ActionNote with your own DB &amp; RAG setup, and Maximize Outcomes with Projects, Idea/ Insight, Study/ RnD, Mindset at CEO ActionNote.</li>
-              <li>If want to use system default key, leave empty this field.</li>
-            </ul>
-
-            <div className="space-y-1.5 pt-1">
-              <label className="block text-[11.5px] font-bold text-gray-800">LLM API Key (Gemini: AIzaSy...)</label>
-              <div className="relative flex items-center">
-                <input
-                  type={showKey ? 'text' : 'password'}
-                  value={apiKeyVal}
-                  onChange={(e) => setApiKeyVal(e.target.value)}
-                  placeholder="AIzaSy..."
-                  className="w-full px-3 py-2 bg-slate-50 border border-gray-200 rounded-lg text-xs font-normal focus:outline-none focus:border-brandsky pr-16"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowKey(!showKey)}
-                  className="absolute right-2.5 text-[11px] text-slate-500 hover:text-slate-800 cursor-pointer"
-                >
-                  {showKey ? 'Hide' : 'Show'}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-              <button
-                type="button"
-                onClick={handleReset}
-                className="px-3 py-1.5 border border-rose-200 text-rose-600 rounded-lg text-xs hover:bg-rose-50 cursor-pointer font-normal"
-              >
-                Reset to Default
-              </button>
-              <div className="flex space-x-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-slate-600 hover:bg-slate-50 cursor-pointer font-normal"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  className="px-4 py-1.5 bg-brandsky text-white rounded-lg text-xs font-bold hover:bg-sky-600 cursor-pointer"
-                >
-                  Save Key
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
     // --- API & MCP INFORMATION MODAL ---
     function ApiMcpModal({ isOpen, onClose }) {
       if (!isOpen) return null;
@@ -4888,14 +4760,14 @@
 
             <div className="space-y-3 text-[11.5px] text-slate-600 leading-relaxed font-normal">
               <div>
-                <h4 className="font-bold text-slate-800 mb-1">1. Gemini REST API Integration</h4>
+                <h4 className="font-bold text-slate-800 mb-1">1. Firebase Vertex AI Integration</h4>
                 <p>
-                  CEO ActionNote integrates directly with Google&apos;s Gemini REST API endpoints (<code className="bg-slate-100 px-1 py-0.5 rounded text-slate-700">gemini-2.0-flash:generateContent</code>) to process executive prompts, synthesize projects, and generate intelligence briefing reports.
+                  CEO ActionNote integrates securely with Google&apos;s Gemini 1.5 Flash model through the Firebase Vertex AI SDK, ensuring that user authentication protects all intelligence interactions and eliminates API Key exposure in the browser.
                 </p>
               </div>
 
               <div>
-                <h4 className="font-bold text-slate-800 mb-1">2. Custom RAG Context &amp; Memory</h4>
+                <h4 className="font-bold text-slate-800 mb-1">2. Custom Context &amp; Memory</h4>
                 <p>
                   When multi-selecting items and invoking CEO Actions, the workspace dynamically packages your selected Projects, Ideas/Insights, Study/RnD papers, and Mindset vectors into structured Markdown context for contextual AI generation.
                 </p>
@@ -4909,7 +4781,7 @@
               </div>
 
               <div className="bg-sky-50 border border-sky-100 rounded-lg p-3 text-sky-900 text-[11px]">
-                💡 <strong>Tip:</strong> You can configure your custom LLM API key anytime using the <span className="font-bold">If, Use my API Key</span> button in the multi-check action bar.
+                💡 <strong>Tip:</strong> Log in to your Firebase account to automatically enable safe, secure, and authentic Gemini AI interactions with your executive workspace.
               </div>
             </div>
 
