@@ -1,0 +1,87 @@
+import { Project, Idea } from '../types';
+
+export const initialProjects: Project[] = [
+  {
+    id: 'proj-1',
+    category: 'Scarlet Ai',
+    company: 'SISTAR Group',
+    title: 'AI 기반 음성 인식 및 스마트 워크플로우 엔진',
+    status: '진행중',
+    progress: 75,
+    updatedAt: '2026-08-05',
+    description: 'Scarlet AI 모듈 연동 및 음성-텍스트 실시간 변환 파이프라인 개발.',
+    isStarred: true,
+  },
+  {
+    id: 'proj-2',
+    category: 'Qubit Algorithm',
+    company: 'Qubit Lab',
+    title: '양자 암호 기반 데이터 최적화 알고리즘 설계',
+    status: '진행중',
+    progress: 45,
+    updatedAt: '2026-08-04',
+    description: '고성능 연산 알고리즘 시뮬레이션 및 데이터 시각화 테스트.',
+    isStarred: true,
+  },
+  {
+    id: 'proj-3',
+    category: 'SD Head Quarter',
+    company: 'SISTAR Group',
+    title: '2026 하반기 글로벌 지사 통합 관리 리포트',
+    status: '완료',
+    progress: 100,
+    updatedAt: '2026-08-01',
+    description: '해외 지사 실적 통합 집계 및 글로벌 가이드라인 수립.',
+    isStarred: false,
+  },
+  {
+    id: 'proj-4',
+    category: 'Intelligence Core',
+    company: 'Core AI Lab',
+    title: '지능형 지식베이스 모듈 구축',
+    status: '계획중',
+    progress: 20,
+    updatedAt: '2026-08-02',
+    description: '사내 지식 자산 검색 및 RAG 연동 자동화 모듈.',
+    isStarred: false,
+  },
+  {
+    id: 'proj-5',
+    category: 'RnD- Mfg',
+    company: 'Tech Mfg Co.',
+    title: '스마트 공정 자동 모니터링 시스템',
+    status: '진행중',
+    progress: 60,
+    updatedAt: '2026-07-28',
+    description: '생산라인 IoT 센서 데이터 수집 및 예지보전 대시보드.',
+    isStarred: true,
+  },
+];
+
+export const initialIdeas: Idea[] = [
+  {
+    id: 'idea-1',
+    category: 'Scarlet Ai',
+    title: 'Scarlet AI 차세대 실시간 대화 모델 아이디어',
+    content: '경량화된 로컬 초저지연 LLM 모델을 통한 모바일 오프라인 지원 방안.',
+    linkUrl: 'https://github.com',
+    createdAt: '2026-08-05',
+  },
+  {
+    id: 'idea-2',
+    category: 'Qubit Biz',
+    title: '양자 연산aaS (as-a-Service) B2B 구독 모델',
+    content: '금융 및 제약 연구소를 위한 클라우드 큐비트 연산 할당 비즈니스 런칭 아이디어.',
+    linkUrl: 'https://notion.so',
+    createdAt: '2026-08-03',
+  },
+  {
+    id: 'idea-3',
+    category: 'Biz Hub',
+    title: '글로벌 파트너십 매칭 플랫폼 솔루션',
+    content: '글로벌 하이테크 스타트업과 제조 대기업을 연결하는 매칭 네트워크.',
+    linkUrl: 'https://google.com',
+    createdAt: '2026-07-30',
+  },
+];
+
