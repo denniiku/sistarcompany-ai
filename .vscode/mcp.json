@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "firebase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@firebase/mcp"
+      ],
+      "env": {
+        "FIREBASE_PROJECT_ID": "sistarcompany-ai"
+      }
+    }
+  }
+}
