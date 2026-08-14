@@ -8,18 +8,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1. Node.js 실행 환경 구성
+      # 1. Node.js 실행 환경 구성 (캐시 옵션을 제거하여 락 파일 에러 방지)
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      # 2. 의존성 패키지 설치
+      # 2. 의존성 패키지 설치 (lock 파일이 없어도 완벽히 동작하는 일반 install 사용)
       - name: Install Dependencies
-        run: npm ci
+        run: npm install
 
-      # 3. React 빌드 실행 (루트 바로 아래에 qubit-erp 폴더를 정적 생성)
+      # 3. React 빌드 실행 (기존 파일 손상 없이 qubit-erp 폴더 내에만 빌드 결과 생성)
       - name: Build Application
         run: npm run build
         env:
