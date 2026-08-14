@@ -1,0 +1,6 @@
+{
+  "name": "Qubit ERP",
+  "description": "An Agentic Workflow Engine for Qubit ERP with C-Level Cockpit, Qubit Optimization Algorithm and 4-Quadrant Workspace.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
