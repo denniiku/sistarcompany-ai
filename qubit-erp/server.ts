@@ -185,6 +185,14 @@ app.post("/api/run-node", async (req, res) => {
 
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
+    // Redirect / to /qubit-erp/ in development to match the base path
+    app.get("/", (req, res, next) => {
+      if (req.path === "/") {
+        return res.redirect("/qubit-erp/");
+      }
+      next();
+    });
+
     // Mount Vite middleware in development
     const vite = await createViteServer({
       server: { middlewareMode: true },

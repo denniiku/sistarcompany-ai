@@ -6,7 +6,7 @@ import {defineConfig} from 'vite';
 export default defineConfig(({ mode }) => {
   const isProd = mode === 'production';
   return {
-    base: isProd ? '/qubit-erp/' : '/',
+    base: '/qubit-erp/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
