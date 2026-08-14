@@ -1,0 +1,16 @@
+{
+  "hosting": {
+    "public": "dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/qubit-erp/**",
+        "destination": "/qubit-erp/index.html"
+      }
+    ]
+  }
+}

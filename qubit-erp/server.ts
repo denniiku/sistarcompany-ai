@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
@@ -195,7 +196,12 @@ async function startServer() {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+      const qubitHtml = path.join(distPath, "qubit-erp", "index.html");
+      if (fs.existsSync(qubitHtml)) {
+        res.sendFile(qubitHtml);
+      } else {
+        res.sendFile(path.join(distPath, "index.html"));
+      }
     });
   }
 
