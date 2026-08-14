@@ -23,7 +23,7 @@ const MOCK_NODES = [
   { id: 'n4', type: 'logic', title: 'Finance Node (Action)', icon: CircleDollarSign, color: 'text-rose-400', border: 'border-rose-500/30', aiConfig: 'Update OPEX limits and generate real-time cashflow alerts.' },
 ];
 
-export default function QubitERP() {
+export default function App() {
   const [activeTab, setActiveTab] = useState('canvas');
   const [selectedNode, setSelectedNode] = useState(MOCK_NODES[1]);
   const [simRate, setSimRate] = useState(5);
@@ -103,6 +103,8 @@ export default function QubitERP() {
 // VIEW 1: AGENTIC NODE CANVAS (n8n Style)
 // ==========================================
 function CanvasView({ selectedNode, setSelectedNode }) {
+  const SelectedIcon = selectedNode ? selectedNode.icon : null;
+
   return (
     <div className="flex w-full h-full">
       {/* CANVAS AREA */}
@@ -155,7 +157,7 @@ function CanvasView({ selectedNode, setSelectedNode }) {
             <>
               <div>
                 <div className={`inline-flex p-3 rounded-xl bg-slate-950 border ${selectedNode.border} mb-4`}>
-                  <selectedNode.icon className={`w-8 h-8 ${selectedNode.color}`} />
+                  {SelectedIcon && <SelectedIcon className={`w-8 h-8 ${selectedNode.color}`} />}
                 </div>
                 <h3 className="text-xl font-bold text-white mb-1">{selectedNode.title}</h3>
                 <p className="text-sm text-slate-400 capitalize">{selectedNode.type} Node</p>
@@ -211,6 +213,8 @@ function CanvasView({ selectedNode, setSelectedNode }) {
 }
 
 function NodeCard({ node, isSelected, onClick }) {
+  const Icon = node.icon;
+  
   return (
     <div 
       onClick={onClick}
@@ -220,7 +224,7 @@ function NodeCard({ node, isSelected, onClick }) {
     >
       <div className="flex items-start gap-4">
         <div className={`p-2 rounded-lg bg-slate-950 border ${node.border}`}>
-          <node.icon className={`w-5 h-5 ${node.color}`} />
+          {Icon && <Icon className={`w-5 h-5 ${node.color}`} />}
         </div>
         <div>
           <h4 className="font-bold text-slate-200 text-sm">{node.title}</h4>
