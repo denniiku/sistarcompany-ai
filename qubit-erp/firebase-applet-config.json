@@ -1,0 +1,12 @@
+{
+  "projectId": "sistarcompany-ai",
+  "appId": "1:154258772246:web:4f165f473ddd9c22c08037",
+  "apiKey": "AIzaSyAOc4lRfzaqBALwNeQatuA9FKB7VAkplAI",
+  "authDomain": "sistarcompany-ai.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-ed5f7590-be77-42c1-99de-9d844b818d03",
+  "storageBucket": "sistarcompany-ai.firebasestorage.app",
+  "messagingSenderId": "154258772246",
+  "measurementId": "",
+  "oAuthClientId": "154258772246-v53d1tku2icvm555q2q4f7gpkqh8sl6n.apps.googleusercontent.com",
+  "recaptchaSiteKey": ""
+}
