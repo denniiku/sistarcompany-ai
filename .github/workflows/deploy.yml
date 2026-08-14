@@ -8,24 +8,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1. Node.js 실행 환경 구성 (캐시 옵션을 제거하여 락 파일 에러 방지)
+      # 1. Node.js 실행 환경 구성 (락 파일 에러 방지를 위해 캐시 옵션 제외)
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # 2. 의존성 패키지 설치 (lock 파일이 없어도 완벽히 동작하는 일반 install 사용)
-      - name: Install Dependencies
-        run: npm install
+      # 2. 프로젝트 위치 자동 감지 및 빌드 실행
+      - name: Install and Build (Auto-detect Workspace)
+        run: |
+          if [ -f "qubit-erp/package.json" ]; then
+            echo "========================================="
+            echo "Detected project in 'qubit-erp' subdirectory."
+            echo "========================================="
+            cd qubit-erp
+            npm install
+            npm run build
+            cd ..
+            
+            echo "Copying build artifacts to qubit-erp root directory..."
+            # 빌드 완료된 컴파일 결과물(dist/*)을 qubit-erp 폴더 안으로 직접 복사하여 배치합니다.
+            # 이 과정으로 index.html이 컴파일된 정식 버전으로 안전하게 교체됩니다.
+            cp -r qubit-erp/dist/* qubit-erp/
+            
+          elif [ -f "package.json" ]; then
+            echo "========================================="
+            echo "Detected project in root directory."
+            echo "========================================="
+            npm install
+            npm run build
+          else
+            echo "Error: package.json not found in root or qubit-erp directory!"
+            exit 1
+          fi
 
-      # 3. React 빌드 실행 (기존 파일 손상 없이 qubit-erp 폴더 내에만 빌드 결과 생성)
-      - name: Build Application
-        run: npm run build
-        env:
-          NODE_ENV: production
-
-      # 4. 기존처럼 루트(.) 폴더 전체를 안전하게 배포
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      # 3. 기존처럼 루트(.) 폴더 전체를 안전하게 배포 (다른 HTML 파일 완벽 보존)
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
           firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
